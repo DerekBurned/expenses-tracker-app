@@ -7,7 +7,7 @@
 
 The Android companion app for the **ExpenseSync API** — an offline-first expense tracker that saves your data locally and syncs to the cloud when you're back online.
 
-🔗 **Backend Companion API:** [ExpenseSync API](../README.md)
+🔗 **Backend Companion API:** [ExpenseSync API](https://github.com/DerekBurned/expense-sync-api/blob/main/README.md)
 
 ---
 
@@ -68,11 +68,11 @@ app/src/main/java/com/example/expenses_tracker_app/
 - Android Studio Hedgehog or newer
 - JDK 11+
 - An emulator or physical device running **Android 9 (API 28)+**
-- The [ExpenseSync Spring Boot backend](../README.md) running locally
+- The [ExpenseSync Spring Boot backend](https://github.com/DerekBurned/expense-sync-api/blob/main/README.md) running locally
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/DerekBurned/expenses-tracker-app.git
 cd expenses-tracker-app
 ```
 
@@ -171,6 +171,3 @@ The app communicates with one endpoint:
 
 ---
 
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
