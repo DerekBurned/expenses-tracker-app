@@ -9,8 +9,9 @@ import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
-class ExpenseRepositoryImpl(
+class ExpenseRepositoryImpl @Inject constructor(
     private val dao: ExpenseDao,
     private val api: ExpenseApi
 ): IExpenseRepository {
