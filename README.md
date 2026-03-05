@@ -1,4 +1,4 @@
-# 📱 ExpenseSync — Android App
+#  ExpenseSync — Android App
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpack-compose&logoColor=white)
@@ -7,11 +7,11 @@
 
 The Android companion app for the **ExpenseSync API** — an offline-first expense tracker that saves your data locally and syncs to the cloud when you're back online.
 
-🔗 **Backend Companion API:** [ExpenseSync API](https://github.com/DerekBurned/expense-sync-api/blob/main/README.md)
+ **Backend Companion API:** [ExpenseSync API](https://github.com/DerekBurned/expense-sync-api/blob/main/README.md)
 
 ---
 
-## 📱 What It Does
+##  What It Does
 
 Lost your connection mid-transaction? No problem. ExpenseSync saves every expense to your device instantly using **Room (SQLite)**, then automatically batches and syncs unsynced records to the Spring Boot backend whenever the network is restored — without duplicates, without data loss.
 
@@ -61,7 +61,7 @@ app/src/main/java/com/example/expenses_tracker_app/
 
 ---
 
-## ⚙️ Setup & Configuration
+##  Setup & Configuration
 
 ### Prerequisites
 
@@ -118,7 +118,7 @@ The `ExpenseRepositoryImpl` handles this flow — querying only unsynced rows, p
 
 ---
 
-## 📡 API Integration
+##  API Integration
 
 The app communicates with one endpoint:
 
@@ -140,7 +140,7 @@ The app communicates with one endpoint:
 
 ---
 
-## 🧪 Running Tests
+##  Running Tests
 ```bash
 # Unit tests
 ./gradlew test
@@ -151,7 +151,7 @@ The app communicates with one endpoint:
 
 ---
 
-## 📋 Requirements
+##  Requirements
 
 - **Min SDK:** API 28 (Android 9.0 Pie)
 - **Target SDK:** API 36
@@ -161,7 +161,7 @@ The app communicates with one endpoint:
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
