@@ -25,11 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.expenses_tracker_app.ui.theme.ExpensestrackerappTheme
-import com.example.expenses_tracker_app.presentation.features.expense.ExpenseContract
-import com.example.expenses_tracker_app.presentation.features.expense.ExpenseViewModel
-import com.example.expenses_tracker_app.presentation.features.expense.Transaction
 import com.example.expenses_tracker_app.presentation.navigation.AppNavigation
 import dagger.hilt.android.AndroidEntryPoint
 
