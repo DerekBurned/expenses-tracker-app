@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.presentation.theme.features
+package com.example.expenses_tracker_app.presentation.features.expense
 
 interface ExpenseContract {
 
