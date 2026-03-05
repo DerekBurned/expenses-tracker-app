@@ -17,7 +17,7 @@ Lost your connection mid-transaction? No problem. ExpenseSync saves every expens
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |:---|:---|
@@ -34,7 +34,7 @@ Lost your connection mid-transaction? No problem. ExpenseSync saves every expens
 
 ---
 
-## 🏗 Project Structure
+##  Project Structure
 ```
 app/src/main/java/com/example/expenses_tracker_app/
 ├── data/
@@ -94,7 +94,7 @@ Open the project in Android Studio and click **Run ▶**, or use:
 
 ---
 
-## 🔄 Offline-First Sync Flow
+##  Offline-First Sync Flow
 ```
 User adds expense
        ↓
