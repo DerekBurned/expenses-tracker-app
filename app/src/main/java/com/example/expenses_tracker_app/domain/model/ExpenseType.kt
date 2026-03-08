@@ -1,6 +1,6 @@
 package com.example.expenses_tracker_app.domain.model
 
-enum class Category {
+enum class ExpenseType {
     FOOD,
     TRANSPORTATION,
     ENTERTAINMENT,

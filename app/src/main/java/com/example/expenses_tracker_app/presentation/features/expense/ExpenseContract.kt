@@ -9,9 +9,10 @@ interface ExpenseContract {
     )
 
     sealed class Intent {
-        object LoadExpenses : Intent()
+        object LoadTransactions : Intent()
         data class DeleteTransaction(val id: String) : Intent()
-        object AddExpenseClicked : Intent()
+        data class TransactionClicked(val id: String) : Intent()
+        object AddTransactionClicked : Intent()
     }
 
     sealed class Effect {

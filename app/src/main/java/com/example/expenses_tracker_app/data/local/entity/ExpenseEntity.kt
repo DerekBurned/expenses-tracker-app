@@ -1,8 +1,8 @@
 package com.example.expenses_tracker_app.data.local.entity
 
-import com.example.expenses_tracker_app.data.remote.ExpenseDTO
-import com.example.expenses_tracker_app.domain.model.Category
-import com.example.expenses_tracker_app.domain.model.Expense
+import com.example.expenses_tracker_app.data.remote.TransactionDTO
+import com.example.expenses_tracker_app.domain.model.ExpenseType
+import com.example.expenses_tracker_app.domain.model.Transaction
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
@@ -17,28 +17,28 @@ class ExpenseEntity : RealmObject {
     var isSynced: Boolean = false
 }
 
-fun ExpenseEntity.toDomain() = Expense(
+/*fun ExpenseEntity.toDomain() = Transaction(
     localId = localId,
     amount = amount,
     description = description,
-    category = Category.valueOf(category),
+    expenseType = ExpenseType.valueOf(category),
     expenseDate = expenseDate
-)
+)*/
 
-fun Expense.toEntity(): ExpenseEntity {
+/*fun Transaction.toEntity(): ExpenseEntity {
     val expense = this
     return ExpenseEntity().apply {
         localId = expense.localId
         amount = expense.amount
         description = expense.description
-        category = expense.category.name
+        category = expense.expenseType.name
         expenseDate = expense.expenseDate
     }
 }
-fun ExpenseEntity.toDTO() = ExpenseDTO(
+fun ExpenseEntity.toDTO() = TransactionDTO(
     localId = localId,
     amount = amount,
     description = description,
     category = category,
     expenseDate = expenseDate
-)
+)*/

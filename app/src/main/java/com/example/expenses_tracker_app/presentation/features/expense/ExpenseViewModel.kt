@@ -2,7 +2,10 @@ package com.example.expenses_tracker_app.presentation.features.expense
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expenses_tracker_app.data.repository.ExpenseRepositoryImpl
+import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,7 +17,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ExpenseViewModel : BaseMviViewModel<
+class ExpenseViewModel @Inject constructor(
+    private val repo: IExpenseRepository
+) : BaseMviViewModel<
         ExpenseContract.State,
         ExpenseContract.Intent,
         ExpenseContract.Effect
@@ -47,18 +52,16 @@ class ExpenseViewModel : BaseMviViewModel<
     private fun fetchExpenses() {
         // In a real app, get this from a Repository/API
         _state.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+          val data =  repo.getAllExpenses()
+            _state.update { it.copy(
+                transactions = data,
+                balance = data.sumOf { t -> t.amount },
+                isLoading = false
+            )}
+        }
 
-        val mockData = listOf(
-            Transaction("1", "Coffee", -4.50, "Food"),
-            Transaction("2", "Salary", 2500.00, "Income"),
-            Transaction("3", "Gym", -50.00, "Health")
-        )
-
-        _state.update { it.copy(
-            transactions = mockData,
-            balance = mockData.sumOf { t -> t.amount },
-            isLoading = false
-        )}
+        _
     }
     private fun removeExpense(id: String) {
         // 1. Get the current list and filter out the deleted item

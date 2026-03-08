@@ -44,7 +44,7 @@ fun ExpenseContent(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { onIntent(ExpenseContract.Intent.AddExpenseClicked) }) {
+            FloatingActionButton(onClick = { onIntent(ExpenseContract.Intent.AddTransactionClicked) }) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         }
@@ -104,9 +104,7 @@ fun ExpenseScreenPreview() {
     )
 
     MaterialTheme {
-        ExpenseContent(
-            state = mockState,
-            onIntent = {} // Do nothing for clicks in preview
-        )
+        ExpenseContent(state = mockState, onIntent = {})
+
     }
 }
