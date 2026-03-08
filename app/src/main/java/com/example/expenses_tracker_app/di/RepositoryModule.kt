@@ -1,5 +1,7 @@
 package com.example.expenses_tracker_app.di
 
+import com.example.expenses_tracker_app.data.local.repository.ExpenseLocalRepositoryImpl
+import com.example.expenses_tracker_app.data.local.repository.IExpenseLocalRepository
 import com.example.expenses_tracker_app.data.repository.ExpenseRepositoryImpl
 import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import dagger.Binds
@@ -14,4 +16,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindExpenseRepository(impl: ExpenseRepositoryImpl): IExpenseRepository
+    @Binds
+    @Singleton
+    abstract fun bindExpenseLocalRepository(impl: ExpenseLocalRepositoryImpl): IExpenseLocalRepository
+
 }

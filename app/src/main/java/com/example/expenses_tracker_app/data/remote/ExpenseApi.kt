@@ -6,5 +6,5 @@ import retrofit2.http.POST
 
 interface ExpenseApi {
     @POST("api/expenses/sync")
-    suspend fun syncExpenses(@Body expenses: List<ExpenseDto>): Response<String>
+    suspend fun syncExpenses(@Body expenses: List<ExpenseDTO>): Response<String>
 }

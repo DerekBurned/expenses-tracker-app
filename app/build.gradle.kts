@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.realm)
 }
 
 android {
@@ -79,9 +80,7 @@ dependencies {
     implementation(libs.androidx.hilt.work)
 
     // Storage
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    implementation(libs.library.base)
     implementation(libs.androidx.datastore.preferences)
 
     // Networking
