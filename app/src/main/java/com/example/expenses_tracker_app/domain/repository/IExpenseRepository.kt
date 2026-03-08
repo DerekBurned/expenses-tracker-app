@@ -4,7 +4,7 @@ import com.example.expenses_tracker_app.domain.model.Transaction
 
 interface IExpenseRepository {
     suspend fun performSync()
-    suspend fun getAllExpenses(): List<Transaction>
-
+    suspend fun getAllTransaction(): List<Transaction>
+    suspend fun deleteTransaction(localId: String): Result<Boolean>
 
 }

@@ -1,5 +1,7 @@
 package com.example.expenses_tracker_app.domain.model
 
+import com.example.expenses_tracker_app.data.remote.TransactionDTO
+
 sealed class Transaction {
     abstract val localId: String
     abstract val amount: Double
@@ -22,3 +24,20 @@ sealed class Transaction {
         val incomeType: IncomeType
     ) : Transaction()
 }
+fun Transaction.toDTO(): TransactionDTO =
+    when (this) {
+        is Transaction.Expense -> TransactionDTO.ExpenseDTO(
+            localId = localId,
+            amount = amount,
+            description = description,
+            date = date,
+            categoryLocalId = expenseType.name
+        )
+        is Transaction.Income -> TransactionDTO.IncomeDTO(
+            localId = localId,
+            amount = amount,
+            description = description,
+            date = date,
+            categoryLocalId = incomeType.name
+        )
+    }

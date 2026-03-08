@@ -19,5 +19,6 @@ interface ExpenseApi {
 
     @DELETE("api/expenses/{id}")
     suspend fun deleteExpense(@Path("id") id: String): Response<String>
-
+    @POST("api/categories/sync")
+    suspend fun syncSettings(@Body categories: List<SettingsDTO>): Response<String>
 }

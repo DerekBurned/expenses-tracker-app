@@ -1,5 +1,5 @@
 package com.example.expenses_tracker_app.presentation.features.expense
-
+import com.example.expenses_tracker_app.domain.model.Transaction
 interface ExpenseContract {
 
     data class State(
