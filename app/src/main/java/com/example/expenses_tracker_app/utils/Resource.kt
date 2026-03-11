@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.utils.internetConnectionObserver
+package com.example.expenses_tracker_app.utils
 
 sealed class Resource<out T> {
     data class Success<T>(val data:T): Resource<T>()
