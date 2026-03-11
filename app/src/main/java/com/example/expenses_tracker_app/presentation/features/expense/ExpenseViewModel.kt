@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.collections.filterNot
 
 class ExpenseViewModel @Inject constructor(
     private val repo: IExpenseRepository
@@ -31,13 +32,13 @@ class ExpenseViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = ExpenseContract.State() // Use the actual initial state object
+            initialValue = ExpenseContract.State()
         )
 
     private val _effect = MutableSharedFlow<ExpenseContract.Effect>()
     val effect = _effect.asSharedFlow()
 
-    suspend fun handleIntent(intent: ExpenseContract.Intent) {
+     fun handleIntent(intent: ExpenseContract.Intent) {
         when (intent) {
             is ExpenseContract.Intent.LoadTransactions ->
                 viewModelScope.launch {  fetchExpenses() }
@@ -57,8 +58,24 @@ class ExpenseViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
           val data: List<Transaction> =  repo.getAllTransaction()
+            val contracts = data.map { transaction ->
+                when (transaction) {
+                    is Transaction.Expense -> TransactionContract(
+                        id = transaction.localId,
+                        title = transaction.description,
+                        amount = transaction.amount,
+                        category = transaction.expenseType.name
+                    )
+                    is Transaction.Income -> TransactionContract(
+                        id = transaction.localId,
+                        title = transaction.description,
+                        amount = transaction.amount,
+                        category = transaction.incomeType.name
+                    )
+                }
+            }
             _state.update { it.copy(
-                transactions = data,
+                transactions = contracts,
                 balance = data.sumOf { t -> t.amount },
                 isLoading = false
             )}
@@ -66,7 +83,7 @@ class ExpenseViewModel @Inject constructor(
     }
     private fun removeExpense(id: String) {
         // 1. Get the current list and filter out the deleted item
-        val updatedList = _state.value.transactions.filterNot { it.localId == id }
+        val updatedList = _state.value.transactions.filterNot { it.id == id }
         viewModelScope.launch { repo.deleteTransaction(id) }
         // 2. Update the state with the new list and recalculated balance
         _state.update { currentState ->

@@ -1,10 +1,10 @@
 package com.example.expenses_tracker_app.presentation.features.expense
-import com.example.expenses_tracker_app.domain.model.Transaction
+
 interface ExpenseContract {
 
     data class State(
         val balance: Double = 0.0,
-        val transactions: List<Transaction> = emptyList(),
+        val transactions: List<TransactionContract> = emptyList(),
         val isLoading: Boolean = false
     )
 
@@ -21,7 +21,7 @@ interface ExpenseContract {
     }
 }
 
-data class Transaction(
+data class TransactionContract(
     val id: String,
     val title: String,
     val amount: Double,
