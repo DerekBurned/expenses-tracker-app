@@ -5,11 +5,11 @@ import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.google.gson.annotations.SerializedName
 
-sealed class TransactionDTO{
-   abstract val localId: String
-   abstract val amount: Double
-   abstract val description: String
-   abstract val date: String
+sealed class TransactionDTO {
+    abstract val localId: String
+    abstract val amount: Double
+    abstract val description: String
+    abstract val date: String
 
 
     data class ExpenseDTO(
@@ -17,8 +17,8 @@ sealed class TransactionDTO{
         override val amount: Double,
         override val description: String,
         override val date: String,
-        @SerializedName("transactionType") val transactionType: String = "EXPENSE",
-        @SerializedName("category") val categoryLocalId: String = "FOOD"  // ← add this
+        val transactionType: String = "EXPENSE",
+        val categoryLocalId: String = "FOOD"  // ← add this
     ) : TransactionDTO()
 
     data class IncomeDTO(
@@ -26,10 +26,11 @@ sealed class TransactionDTO{
         override val amount: Double,
         override val description: String,
         override val date: String,
-        @SerializedName("transactionType") val transactionType: String = "INCOME",  // ← fix this
-        @SerializedName("categoryLocalId") val categoryLocalId: String = "OTHER" // ← add this
+        val transactionType: String = "INCOME",  // ← fix this
+        val categoryLocalId: String = "OTHER" // ← add this
     ) : TransactionDTO()
 }
+
 fun TransactionDTO.toDomain(): Transaction =
     when (this) {
         is TransactionDTO.IncomeDTO -> Transaction.Income(
@@ -39,12 +40,15 @@ fun TransactionDTO.toDomain(): Transaction =
             date = date,
             incomeType = runCatching { IncomeType.valueOf(categoryLocalId) }.getOrDefault(IncomeType.OTHER)
         )
+
         is TransactionDTO.ExpenseDTO -> Transaction.Expense(
             localId = localId,
             amount = amount,
             description = description,
             date = date,
-            expenseType = runCatching { ExpenseType.valueOf(categoryLocalId) }.getOrDefault(ExpenseType.DEFAULT)
+            expenseType = runCatching { ExpenseType.valueOf(categoryLocalId) }.getOrDefault(
+                ExpenseType.DEFAULT
+            )
         )
     }
 
