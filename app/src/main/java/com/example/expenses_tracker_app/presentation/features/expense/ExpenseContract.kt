@@ -4,14 +4,15 @@ interface ExpenseContract {
 
     data class State(
         val balance: Double = 0.0,
-        val transactions: List<Transaction> = emptyList(),
+        val transactions: List<TransactionContract> = emptyList(),
         val isLoading: Boolean = false
     )
 
     sealed class Intent {
-        object LoadExpenses : Intent()
+        object LoadTransactions : Intent()
         data class DeleteTransaction(val id: String) : Intent()
-        object AddExpenseClicked : Intent()
+        data class TransactionClicked(val id: String) : Intent()
+        object AddTransactionClicked : Intent()
     }
 
     sealed class Effect {
@@ -20,7 +21,7 @@ interface ExpenseContract {
     }
 }
 
-data class Transaction(
+data class TransactionContract(
     val id: String,
     val title: String,
     val amount: Double,

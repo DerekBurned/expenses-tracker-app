@@ -1,20 +1,24 @@
 package com.example.expenses_tracker_app.presentation.features.expense
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expenses_tracker_app.domain.model.Transaction
+import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.collections.filterNot
 
-class ExpenseViewModel : BaseMviViewModel<
+class ExpenseViewModel @Inject constructor(
+    private val repo: IExpenseRepository
+) : BaseMviViewModel<
         ExpenseContract.State,
         ExpenseContract.Intent,
         ExpenseContract.Effect
@@ -28,42 +32,59 @@ class ExpenseViewModel : BaseMviViewModel<
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = ExpenseContract.State() // Use the actual initial state object
+            initialValue = ExpenseContract.State()
         )
 
     private val _effect = MutableSharedFlow<ExpenseContract.Effect>()
     val effect = _effect.asSharedFlow()
 
-    fun handleIntent(intent: ExpenseContract.Intent) {
+     fun handleIntent(intent: ExpenseContract.Intent) {
         when (intent) {
-            is ExpenseContract.Intent.LoadExpenses -> fetchExpenses()
+            is ExpenseContract.Intent.LoadTransactions ->
+                viewModelScope.launch {  fetchExpenses() }
             is ExpenseContract.Intent.DeleteTransaction -> removeExpense(intent.id)
-            is ExpenseContract.Intent.AddExpenseClicked -> {
+            is ExpenseContract.Intent.AddTransactionClicked -> {
                 viewModelScope.launch { _effect.emit(ExpenseContract.Effect.NavigateToAddExpense) }
+            }
+
+            else -> {
+
             }
         }
     }
 
-    private fun fetchExpenses() {
+    private suspend fun fetchExpenses() {
         // In a real app, get this from a Repository/API
         _state.update { it.copy(isLoading = true) }
-
-        val mockData = listOf(
-            Transaction("1", "Coffee", -4.50, "Food"),
-            Transaction("2", "Salary", 2500.00, "Income"),
-            Transaction("3", "Gym", -50.00, "Health")
-        )
-
-        _state.update { it.copy(
-            transactions = mockData,
-            balance = mockData.sumOf { t -> t.amount },
-            isLoading = false
-        )}
+        viewModelScope.launch {
+          val data: List<Transaction> =  repo.getAllTransaction()
+            val contracts = data.map { transaction ->
+                when (transaction) {
+                    is Transaction.Expense -> TransactionContract(
+                        id = transaction.localId,
+                        title = transaction.description,
+                        amount = transaction.amount,
+                        category = transaction.expenseType.name
+                    )
+                    is Transaction.Income -> TransactionContract(
+                        id = transaction.localId,
+                        title = transaction.description,
+                        amount = transaction.amount,
+                        category = transaction.incomeType.name
+                    )
+                }
+            }
+            _state.update { it.copy(
+                transactions = contracts,
+                balance = data.sumOf { t -> t.amount },
+                isLoading = false
+            )}
+        }
     }
     private fun removeExpense(id: String) {
         // 1. Get the current list and filter out the deleted item
         val updatedList = _state.value.transactions.filterNot { it.id == id }
-
+        viewModelScope.launch { repo.deleteTransaction(id) }
         // 2. Update the state with the new list and recalculated balance
         _state.update { currentState ->
             currentState.copy(

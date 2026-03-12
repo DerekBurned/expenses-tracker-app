@@ -24,8 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.expenses_tracker_app.presentation.features.expense.ExpenseContract
 import com.example.expenses_tracker_app.presentation.features.expense.ExpenseViewModel
-import com.example.expenses_tracker_app.presentation.features.expense.Transaction
-
+import com.example.expenses_tracker_app.presentation.features.expense.TransactionContract
 
 @Composable
 fun ExpenseScreen(viewModel: ExpenseViewModel) {
@@ -44,14 +43,15 @@ fun ExpenseContent(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { onIntent(ExpenseContract.Intent.AddExpenseClicked) }) {
+            FloatingActionButton(onClick = { onIntent(ExpenseContract.Intent.AddTransactionClicked) }) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Balance Card
-            Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Card(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
                 Text(
                     text = "$${state.balance}",
                     style = MaterialTheme.typography.headlineMedium,
@@ -59,7 +59,6 @@ fun ExpenseContent(
                 )
             }
 
-            // List
             LazyColumn {
                 items(state.transactions) { transaction ->
                     TransactionItem(
@@ -73,8 +72,10 @@ fun ExpenseContent(
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction,
-                    onDeleteClick: (String) -> Unit) {
+fun TransactionItem(
+    transaction: TransactionContract,
+    onDeleteClick: (String) -> Unit
+) {
     ListItem(
         headlineContent = { Text(transaction.title) },
         supportingContent = { Text(transaction.category) },
@@ -92,21 +93,17 @@ fun TransactionItem(transaction: Transaction,
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ExpenseScreenPreview() {
-    // Manually creating a mock state for the preview
     val mockState = ExpenseContract.State(
         balance = 1250.50,
         transactions = listOf(
-            Transaction("1", "Groceries", -85.0, "Food"),
-            Transaction("2", "Salary", 2000.0, "Work"),
-            Transaction("3", "Netflix", -15.99, "Subs")
+            TransactionContract("1", "Groceries", -85.0, "Food"),
+            TransactionContract("2", "Salary", 2000.0, "Work"),
+            TransactionContract("3", "Netflix", -15.99, "Subs")
         ),
         isLoading = false
     )
 
     MaterialTheme {
-        ExpenseContent(
-            state = mockState,
-            onIntent = {} // Do nothing for clicks in preview
-        )
+        ExpenseContent(state = mockState, onIntent = {})
     }
 }

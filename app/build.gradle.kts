@@ -1,9 +1,19 @@
+// ============================================================
+// app/build.gradle.kts — managed & audited March 2026
+// ============================================================
+// [FIX] Explicitly apply kotlin-android with version from 
+// libs.versions.toml because built-in Kotlin (2.3.x) in AGP 9
+// is incompatible with Realm 3.0.0.
+// ============================================================
+
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android) // [ADDED]
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.realm)
 }
 
 android {
@@ -77,11 +87,10 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     // Storage
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    implementation(libs.library.base)
     implementation(libs.androidx.datastore.preferences)
 
     // Networking
