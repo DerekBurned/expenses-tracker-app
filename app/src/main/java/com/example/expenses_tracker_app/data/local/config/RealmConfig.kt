@@ -1,17 +1,21 @@
 package com.example.expenses_tracker_app.data.local.config
 
-
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.expenses_tracker_app.data.local.dao.SettingsDao
+import com.example.expenses_tracker_app.data.local.dao.TransactionDao
 import com.example.expenses_tracker_app.data.local.entity.SettingsEntity
+import com.example.expenses_tracker_app.data.local.entity.StringMapConverter
 import com.example.expenses_tracker_app.data.local.entity.TransactionEntity
-import com.example.expenses_tracker_app.presentation.features.expense.ui.TransactionItem
-import io.realm.kotlin.RealmConfiguration
 
-object RealmConfig {
-    val configuration = RealmConfiguration.Builder(
-        schema = setOf(TransactionEntity::class,
-            SettingsEntity::class)
-    )
-        .name("expenses.realm")
-        .schemaVersion(2)
-        .build()
+@Database(
+    entities = [TransactionEntity::class, SettingsEntity::class],
+    version = 1,
+    exportSchema = false
+)
+@TypeConverters(StringMapConverter::class)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun transactionDao(): TransactionDao
+    abstract fun settingsDao(): SettingsDao
 }

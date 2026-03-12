@@ -9,7 +9,6 @@ import com.example.expenses_tracker_app.data.remote.toDomain
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import com.example.expenses_tracker_app.utils.internetConnectionObserver.NetworkObserver
-import com.example.expenses_tracker_app.utils.internetConnectionObserver.Resource
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import kotlin.collections.map

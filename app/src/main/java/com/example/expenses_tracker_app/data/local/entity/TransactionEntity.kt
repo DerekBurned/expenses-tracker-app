@@ -1,24 +1,26 @@
 package com.example.expenses_tracker_app.data.local.entity
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.expenses_tracker_app.data.remote.TransactionDTO
 import com.example.expenses_tracker_app.domain.model.ExpenseType
 import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.domain.model.Transaction
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
-import org.mongodb.kbson.ObjectId
+import java.util.UUID
 
-class TransactionEntity : RealmObject {
+@Entity(tableName = "transactions")
+data class TransactionEntity(
     @PrimaryKey
-    var localId: String = ObjectId().toString()
-    var amount: Double = 0.0
-    var description: String = ""
-    var category: String = ""
-    var transactionType: String = ""
-    var date: String = ""
-    var isSynced: Boolean = false
-}
+    val localId: String = UUID.randomUUID().toString(),
+    val amount: Double = 0.0,
+    val description: String = "",
+    val category: String = "",
+    val transactionType: String = "",
+    val date: String = "",
+    val isSynced: Boolean = false
+)
 
+// Entity → Domain
 fun TransactionEntity.toDomain(): Transaction =
     when (transactionType) {
         "INCOME" -> Transaction.Income(
@@ -38,26 +40,25 @@ fun TransactionEntity.toDomain(): Transaction =
     }
 
 // Domain → Entity
-fun Transaction.toEntity(): TransactionEntity = TransactionEntity().apply {
-    when (val t = this@toEntity) {
-        is Transaction.Expense -> {
-            localId = t.localId
-            amount = t.amount
-            description = t.description
-            date = t.date
-            category = t.expenseType.name
+fun Transaction.toEntity(): TransactionEntity =
+    when (val t = this) {
+        is Transaction.Expense -> TransactionEntity(
+            localId = t.localId,
+            amount = t.amount,
+            description = t.description,
+            date = t.date,
+            category = t.expenseType.name,
             transactionType = "EXPENSE"
-        }
-        is Transaction.Income -> {
-            localId = t.localId
-            amount = t.amount
-            description = t.description
-            date = t.date
-            category = t.incomeType.name
+        )
+        is Transaction.Income -> TransactionEntity(
+            localId = t.localId,
+            amount = t.amount,
+            description = t.description,
+            date = t.date,
+            category = t.incomeType.name,
             transactionType = "INCOME"
-        }
+        )
     }
-}
 
 // Entity → DTO
 fun TransactionEntity.toDTO(): TransactionDTO =

@@ -6,7 +6,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import jakarta.inject.Inject
+import javax.inject.Inject                   // FIXED: was jakarta.inject.Inject (JEE, not Android)
 import java.util.concurrent.TimeUnit
 
 class SyncScheduler @Inject constructor(
@@ -16,18 +16,18 @@ class SyncScheduler @Inject constructor(
         val request = OneTimeWorkRequestBuilder<SyncExpensesWorker>()
             .setConstraints(
                 Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED) // only run when online
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
             )
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
-                15, TimeUnit.MINUTES        // retry after each 15m
+                15, TimeUnit.MINUTES
             )
             .build()
 
         workManager.enqueueUniqueWork(
             "sync_expenses",
-            ExistingWorkPolicy.KEEP,        // don't queue duplicates
+            ExistingWorkPolicy.KEEP,
             request
         )
     }

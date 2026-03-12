@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
-import jakarta.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject                   // FIXED: was jakarta.inject.Inject (JEE, not Android)
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,17 +15,15 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.collections.filterNot
 
+@HiltViewModel
 class ExpenseViewModel @Inject constructor(
     private val repo: IExpenseRepository
 ) : BaseMviViewModel<
         ExpenseContract.State,
         ExpenseContract.Intent,
         ExpenseContract.Effect
-        >(
-            initialState = ExpenseContract.State()
-        ) {
+        >(initialState = ExpenseContract.State()) {
 
     private val _state = MutableStateFlow(ExpenseContract.State())
     val state: StateFlow<ExpenseContract.State> = _state
@@ -38,63 +37,65 @@ class ExpenseViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<ExpenseContract.Effect>()
     val effect = _effect.asSharedFlow()
 
-     fun handleIntent(intent: ExpenseContract.Intent) {
+    fun handleIntent(intent: ExpenseContract.Intent) {
         when (intent) {
             is ExpenseContract.Intent.LoadTransactions ->
-                viewModelScope.launch {  fetchExpenses() }
-            is ExpenseContract.Intent.DeleteTransaction -> removeExpense(intent.id)
-            is ExpenseContract.Intent.AddTransactionClicked -> {
+                viewModelScope.launch { fetchExpenses() }
+            is ExpenseContract.Intent.DeleteTransaction ->
+                removeExpense(intent.id)
+            is ExpenseContract.Intent.AddTransactionClicked ->
                 viewModelScope.launch { _effect.emit(ExpenseContract.Effect.NavigateToAddExpense) }
-            }
-
-            else -> {
-
-            }
+            else -> Unit
         }
     }
 
-    private suspend fun fetchExpenses() {
-        // In a real app, get this from a Repository/API
-        _state.update { it.copy(isLoading = true) }
+    private fun fetchExpenses() {
         viewModelScope.launch {
-          val data: List<Transaction> =  repo.getAllTransaction()
-            val contracts = data.map { transaction ->
-                when (transaction) {
-                    is Transaction.Expense -> TransactionContract(
-                        id = transaction.localId,
-                        title = transaction.description,
-                        amount = transaction.amount,
-                        category = transaction.expenseType.name
-                    )
-                    is Transaction.Income -> TransactionContract(
-                        id = transaction.localId,
-                        title = transaction.description,
-                        amount = transaction.amount,
-                        category = transaction.incomeType.name
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val data: List<Transaction> = repo.getAllTransaction()
+                val contracts = data.map { transaction ->
+                    when (transaction) {
+                        is Transaction.Expense -> TransactionContract(
+                            id       = transaction.localId,
+                            title    = transaction.description,
+                            amount   = transaction.amount,
+                            category = transaction.expenseType.name
+                        )
+                        is Transaction.Income -> TransactionContract(
+                            id       = transaction.localId,
+                            title    = transaction.description,
+                            amount   = transaction.amount,
+                            category = transaction.incomeType.name
+                        )
+                    }
+                }
+                _state.update {
+                    it.copy(
+                        transactions = contracts,
+                        balance      = data.sumOf { t -> t.amount },
+                        isLoading    = false
                     )
                 }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false) }
+                _effect.emit(ExpenseContract.Effect.ShowError(e.message ?: "Unknown error"))
             }
-            _state.update { it.copy(
-                transactions = contracts,
-                balance = data.sumOf { t -> t.amount },
-                isLoading = false
-            )}
         }
     }
+
     private fun removeExpense(id: String) {
-        // 1. Get the current list and filter out the deleted item
         val updatedList = _state.value.transactions.filterNot { it.id == id }
         viewModelScope.launch { repo.deleteTransaction(id) }
-        // 2. Update the state with the new list and recalculated balance
         _state.update { currentState ->
             currentState.copy(
                 transactions = updatedList,
-                balance = updatedList.sumOf { it.amount }
+                balance      = updatedList.sumOf { it.amount }
             )
         }
-}
+    }
 
     override fun onIntent(intent: ExpenseContract.Intent) {
-        TODO("Not yet implemented")
+        handleIntent(intent)
     }
 }
