@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.data.local.config
+package com.example.expenses_tracker_app.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

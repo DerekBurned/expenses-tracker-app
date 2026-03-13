@@ -1,11 +1,12 @@
-package com.example.expenses_tracker_app.presentation.features.expense
+package com.example.expenses_tracker_app.presentation.features.expense.ui.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
+import com.example.expenses_tracker_app.presentation.features.expense.TransactionUIModel
+import com.example.expenses_tracker_app.presentation.features.expense.TransactionsContract
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject                   // FIXED: was jakarta.inject.Inject (JEE, not Android)
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,36 +16,37 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class ExpenseViewModel @Inject constructor(
+class TransactionListViewModel @Inject constructor(
     private val repo: IExpenseRepository
 ) : BaseMviViewModel<
-        ExpenseContract.State,
-        ExpenseContract.Intent,
-        ExpenseContract.Effect
-        >(initialState = ExpenseContract.State()) {
+        TransactionsContract.State,
+        TransactionsContract.Intent,
+        TransactionsContract.Effect
+        >(initialState = TransactionsContract.State()) {
 
-    private val _state = MutableStateFlow(ExpenseContract.State())
-    val state: StateFlow<ExpenseContract.State> = _state
+    private val _state = MutableStateFlow(TransactionsContract.State())
+    val state: StateFlow<TransactionsContract.State> = _state
         .onStart { fetchExpenses() }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = ExpenseContract.State()
+            started = SharingStarted.Companion.WhileSubscribed(5000L),
+            initialValue = TransactionsContract.State()
         )
 
-    private val _effect = MutableSharedFlow<ExpenseContract.Effect>()
+    private val _effect = MutableSharedFlow<TransactionsContract.Effect>()
     val effect = _effect.asSharedFlow()
 
-    fun handleIntent(intent: ExpenseContract.Intent) {
+    fun handleIntent(intent: TransactionsContract.Intent) {
         when (intent) {
-            is ExpenseContract.Intent.LoadTransactions ->
+            is TransactionsContract.Intent.LoadTransactions ->
                 viewModelScope.launch { fetchExpenses() }
-            is ExpenseContract.Intent.DeleteTransaction ->
+            is TransactionsContract.Intent.DeleteTransaction ->
                 removeExpense(intent.id)
-            is ExpenseContract.Intent.AddTransactionClicked ->
-                viewModelScope.launch { _effect.emit(ExpenseContract.Effect.NavigateToAddExpense) }
+            is TransactionsContract.Intent.AddTransactionClicked ->
+                viewModelScope.launch { _effect.emit(TransactionsContract.Effect.NavigateToAddExpense) }
             else -> Unit
         }
     }
@@ -56,16 +58,16 @@ class ExpenseViewModel @Inject constructor(
                 val data: List<Transaction> = repo.getAllTransaction()
                 val contracts = data.map { transaction ->
                     when (transaction) {
-                        is Transaction.Expense -> TransactionContract(
-                            id       = transaction.localId,
-                            title    = transaction.description,
-                            amount   = transaction.amount,
+                        is Transaction.Expense -> TransactionUIModel(
+                            id = transaction.localId,
+                            title = transaction.description,
+                            amount = transaction.amount,
                             category = transaction.expenseType.name
                         )
-                        is Transaction.Income -> TransactionContract(
-                            id       = transaction.localId,
-                            title    = transaction.description,
-                            amount   = transaction.amount,
+                        is Transaction.Income -> TransactionUIModel(
+                            id = transaction.localId,
+                            title = transaction.description,
+                            amount = transaction.amount,
                             category = transaction.incomeType.name
                         )
                     }
@@ -79,7 +81,7 @@ class ExpenseViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false) }
-                _effect.emit(ExpenseContract.Effect.ShowError(e.message ?: "Unknown error"))
+                _effect.emit(TransactionsContract.Effect.ShowError(e.message ?: "Unknown error"))
             }
         }
     }
@@ -95,7 +97,7 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
-    override fun onIntent(intent: ExpenseContract.Intent) {
+    override fun onIntent(intent: TransactionsContract.Intent) {
         handleIntent(intent)
     }
 }
