@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.presentation.features.expense.ui
+package com.example.expenses_tracker_app.presentation.features.expense.ui.addTransaction
 
 import androidx.compose.runtime.Composable
 
@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.expenses_tracker_app.domain.model.ExpenseType
 import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.domain.model.Transaction
+import java.time.LocalDate
 import java.util.UUID
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -208,7 +209,7 @@ fun AddTransactionScreen(
                             localId    = UUID.randomUUID().toString(),
                             amount     = finalAmount,
                             description = description,
-                            date       = java.time.LocalDate.now().toString(),
+                            date       = LocalDate.now().toString(),
                             expenseType = selectedExpCat
                         )
                     } else {
@@ -216,7 +217,7 @@ fun AddTransactionScreen(
                             localId     = UUID.randomUUID().toString(),
                             amount      = finalAmount,
                             description = description,
-                            date        = java.time.LocalDate.now().toString(),
+                            date        = LocalDate.now().toString(),
                             incomeType  = selectedIncCat
                         )
                     }

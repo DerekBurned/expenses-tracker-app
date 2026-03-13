@@ -8,8 +8,8 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.example.expenses_tracker_app.presentation.features.expense.ExpenseViewModel
-import com.example.expenses_tracker_app.presentation.features.expense.ui.ExpenseScreen
+import com.example.expenses_tracker_app.presentation.features.expense.ui.viewModels.TransactionListViewModel
+import com.example.expenses_tracker_app.presentation.features.expense.ui.transacionList.ExpenseScreen
 
 @Composable
 fun AppNavigation() {
@@ -29,7 +29,7 @@ fun AppNavigation() {
         rememberViewModelStoreNavEntryDecorator()),
         entryProvider = entryProvider {
             entry<AppRoute.Home>{
-                val vm: ExpenseViewModel = viewModel()
+                val vm: TransactionListViewModel = viewModel()
                 ExpenseScreen(viewModel = vm)
             }
             entry<AppRoute.AddExpense>{

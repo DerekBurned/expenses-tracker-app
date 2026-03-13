@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.presentation.features.expense.ui
+package com.example.expenses_tracker_app.presentation.features.expense.ui.transacionList
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,12 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.expenses_tracker_app.presentation.features.expense.ExpenseContract
-import com.example.expenses_tracker_app.presentation.features.expense.ExpenseViewModel
-import com.example.expenses_tracker_app.presentation.features.expense.TransactionContract
+import com.example.expenses_tracker_app.presentation.features.expense.TransactionsContract
+import com.example.expenses_tracker_app.presentation.features.expense.ui.viewModels.TransactionListViewModel
+import com.example.expenses_tracker_app.presentation.features.expense.TransactionUIModel
 
 @Composable
-fun ExpenseScreen(viewModel: ExpenseViewModel) {
+fun ExpenseScreen(viewModel: TransactionListViewModel) {
     val state by viewModel.state.collectAsState()
 
     ExpenseContent(
@@ -38,12 +38,12 @@ fun ExpenseScreen(viewModel: ExpenseViewModel) {
 
 @Composable
 fun ExpenseContent(
-    state: ExpenseContract.State,
-    onIntent: (ExpenseContract.Intent) -> Unit
+    state: TransactionsContract.State,
+    onIntent: (TransactionsContract.Intent) -> Unit
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { onIntent(ExpenseContract.Intent.AddTransactionClicked) }) {
+            FloatingActionButton(onClick = { onIntent(TransactionsContract.Intent.AddTransactionClicked) }) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         }
@@ -63,7 +63,7 @@ fun ExpenseContent(
                 items(state.transactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
-                        onDeleteClick = { id -> onIntent(ExpenseContract.Intent.DeleteTransaction(id)) }
+                        onDeleteClick = { id -> onIntent(TransactionsContract.Intent.DeleteTransaction(id)) }
                     )
                 }
             }
@@ -73,7 +73,7 @@ fun ExpenseContent(
 
 @Composable
 fun TransactionItem(
-    transaction: TransactionContract,
+    transaction: TransactionUIModel,
     onDeleteClick: (String) -> Unit
 ) {
     ListItem(
@@ -93,12 +93,12 @@ fun TransactionItem(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ExpenseScreenPreview() {
-    val mockState = ExpenseContract.State(
+    val mockState = TransactionsContract.State(
         balance = 1250.50,
         transactions = listOf(
-            TransactionContract("1", "Groceries", -85.0, "Food"),
-            TransactionContract("2", "Salary", 2000.0, "Work"),
-            TransactionContract("3", "Netflix", -15.99, "Subs")
+            TransactionUIModel("1", "Groceries", -85.0, "Food"),
+            TransactionUIModel("2", "Salary", 2000.0, "Work"),
+            TransactionUIModel("3", "Netflix", -15.99, "Subs")
         ),
         isLoading = false
     )
