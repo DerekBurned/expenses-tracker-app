@@ -18,7 +18,7 @@ sealed class TransactionDTO {
         override val description: String,
         override val date: String,
         val transactionType: String = "EXPENSE",
-        val categoryLocalId: String = "FOOD"  // ← add this
+        val categoryLocalId: String = "FOOD"
     ) : TransactionDTO()
 
     data class IncomeDTO(
@@ -26,8 +26,8 @@ sealed class TransactionDTO {
         override val amount: Double,
         override val description: String,
         override val date: String,
-        val transactionType: String = "INCOME",  // ← fix this
-        val categoryLocalId: String = "OTHER" // ← add this
+        val transactionType: String = "INCOME",
+        val categoryLocalId: String = "OTHER"
     ) : TransactionDTO()
 }
 

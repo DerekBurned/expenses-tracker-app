@@ -1,0 +1,72 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #f5f5f5
+    BorderColor #555
+    ArrowColor #555
+}
+
+package Transactio{
+abstract class Transaction <<sealed>> {
+     localId: String
+     amount: Double
+     description: String
+     date: String
+     toDTO(): TransactionDTO
+     toEntity(): TransactionEntity
+}
+
+class Expense <<data class>> {
+     localId: String
+     amount: Double
+     description: String
+     date: String
+     expenseType: ExpenseType
+}
+
+class Income <<data class>> {
+     localId: String
+     amount: Double
+     description: String
+     date: String
+     incomeType: IncomeType
+}
+}
+
+class Settings <<data class>>{
+    userId:String
+    name: String
+    icon: String
+    email: String
+    darkTheme: Boolean?
+    customCategories: Map<String, String>
+}
+ package TransactionDTO {
+    abstract class TransactionDTO <<sealed>> {
+    abstract  localId: String
+    abstract  amount: Double
+    abstract description: String
+    abstract  date: String
+    }
+    class ExpenseDTO <<data class>>{
+    super(locaId, amount, description, date)
+    transactionType:String,
+    categoryLocalId:String
+    }
+    class IncomeDTO <<data class>>{
+    super(locaId, amount, description, date)
+    transactionType:String,
+    categoryLocalId:String
+    }
+}
+
+
+package Remote{
+
+}
+
+Transaction <|--|> Expense
+Transaction <|--|> Income
+
+@enduml
