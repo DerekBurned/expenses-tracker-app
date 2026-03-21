@@ -1,6 +1,6 @@
 package com.example.expenses_tracker_app.presentation.features.expense
 
-interface TransactionContract {
+interface TransactionsContract {
 
     data class State(
         val balance: Double = 0.0,

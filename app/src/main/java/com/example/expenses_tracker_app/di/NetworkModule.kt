@@ -16,8 +16,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            //Paste your IP address here  http://<YOUR_IP_ADDRESS>:8080/
-            .baseUrl("http://10.0.2.2:8080/") // Spring Boot local server URL
+            .baseUrl("http://192.168.56.1:8080/") // Spring Boot local server URL
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

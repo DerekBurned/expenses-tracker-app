@@ -20,61 +20,61 @@ data class TransactionEntity(
     val isSynced: Boolean = false
 )
 
-// Entity → Domain
+// ─── Entity → Domain ──────────────────────────────────────────────────────────
+
 fun TransactionEntity.toDomain(): Transaction =
     when (transactionType) {
         "INCOME" -> Transaction.Income(
-            localId = localId,
-            amount = amount,
+            localId    = localId,
+            amount     = amount,
             description = description,
-            date = date,
+            date       = date,
             incomeType = runCatching { IncomeType.valueOf(category) }.getOrDefault(IncomeType.OTHER)
         )
         else -> Transaction.Expense(
-            localId = localId,
-            amount = amount,
+            localId     = localId,
+            amount      = amount,
             description = description,
-            date = date,
+            date        = date,
             expenseType = runCatching { ExpenseType.valueOf(category) }.getOrDefault(ExpenseType.DEFAULT)
         )
     }
 
-// Domain → Entity
+// ─── Domain → Entity ──────────────────────────────────────────────────────────
+
 fun Transaction.toEntity(): TransactionEntity =
-    when (val t = this) {
+    when (this) {
         is Transaction.Expense -> TransactionEntity(
-            localId = t.localId,
-            amount = t.amount,
-            description = t.description,
-            date = t.date,
-            category = t.expenseType.name,
+            localId         = localId,
+            amount          = amount,
+            description     = description,
+            date            = date,
+            category        = expenseType.name,
             transactionType = "EXPENSE"
         )
         is Transaction.Income -> TransactionEntity(
-            localId = t.localId,
-            amount = t.amount,
-            description = t.description,
-            date = t.date,
-            category = t.incomeType.name,
+            localId         = localId,
+            amount          = amount,
+            description     = description,
+            date            = date,
+            category        = incomeType.name,
             transactionType = "INCOME"
         )
     }
 
-// Entity → DTO
+// ─── Entity → DTO (for sync worker) ──────────────────────────────────────────
+
+/**
+ * FIX: was constructing TransactionDTO.ExpenseDTO / TransactionDTO.IncomeDTO
+ * (sealed subtypes). TransactionDTO is now a flat data class — construct it
+ * directly with the transactionType discriminator set correctly.
+ */
 fun TransactionEntity.toDTO(): TransactionDTO =
-    when (transactionType) {
-        "INCOME" -> TransactionDTO.IncomeDTO(
-            localId = localId,
-            amount = amount,
-            description = description,
-            date = date,
-            categoryLocalId = category
-        )
-        else -> TransactionDTO.ExpenseDTO(
-            localId = localId,
-            amount = amount,
-            description = description,
-            date = date,
-            categoryLocalId = category
-        )
-    }
+    TransactionDTO(
+        localId         = localId,
+        amount          = amount,
+        description     = description,
+        date            = date,
+        transactionType = transactionType,   // "EXPENSE" or "INCOME"
+        categoryLocalId = category
+    )
