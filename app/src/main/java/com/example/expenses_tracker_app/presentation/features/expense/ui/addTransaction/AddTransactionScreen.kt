@@ -1,5 +1,6 @@
 package com.example.expenses_tracker_app.presentation.features.expense.ui.addTransaction
 
+import android.widget.ListView
 import androidx.compose.runtime.Composable
 
 
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -46,17 +48,15 @@ private val CardDark      = Color(0xFF28283E)
 private val SubtleText    = Color(0xFF8A8AA8)
 private val White         = Color(0xFFFFFFFF)
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 private val expenseCategories = ExpenseType.entries.toList()
 private val incomeCategories  = IncomeType.entries.toList()
 
-// ─── Contract ─────────────────────────────────────────────────────────────────
 sealed class AddTransactionIntent {
     data class Submit(val transaction: Transaction) : AddTransactionIntent()
     object Cancel : AddTransactionIntent()
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
+
 @Composable
 fun AddTransactionScreen(
     onIntent: (AddTransactionIntent) -> Unit
@@ -86,7 +86,6 @@ fun AddTransactionScreen(
         ) {
             Spacer(Modifier.height(56.dp))
 
-            // ── Top Bar ───────────────────────────────────────────────────────
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -105,7 +104,7 @@ fun AddTransactionScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // ── Expense / Income Toggle ───────────────────────────────────────
+
             TypeToggle(
                 isExpense = isExpense,
                 accentColor = accentColor,
@@ -117,7 +116,6 @@ fun AddTransactionScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // ── Amount ────────────────────────────────────────────────────────
             Text("Amount", color = SubtleText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
@@ -148,7 +146,6 @@ fun AddTransactionScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Description ───────────────────────────────────────────────────
             Text("Description", color = SubtleText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
@@ -229,7 +226,6 @@ fun AddTransactionScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) {
-                Icon(Icons.Default.Check, contentDescription = null, tint = White)
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = if (isExpense) "Add Expense" else "Add Income",
@@ -280,8 +276,8 @@ private fun TypeToggle(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ToggleLabel("💸  Expense", isExpense) { onToggle(true) }
-            ToggleLabel("💰  Income", !isExpense) { onToggle(false) }
+            ToggleLabel("Expense", isExpense) { onToggle(true) }
+            ToggleLabel("Income", !isExpense) { onToggle(false) }
         }
     }
 }
@@ -316,27 +312,126 @@ private fun CategoryGrid(
     categories: List<String>,
     selected: String,
     accentColor: Color,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    onAddCategory: () -> Unit = {}
 ) {
-    val chunked = categories.chunked(3)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        chunked.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { name ->
-                    CategoryChip(
-                        label = name.replace("_", " "),
-                        isSelected = name == selected,
-                        accentColor = accentColor,
-                        onClick = { onSelect(name) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // Fill empty slots
-                repeat(3 - row.size) {
-                    Spacer(Modifier.weight(1f))
+    val useListView = categories.size > 9
+
+    if (useListView) {
+        // ── Scrollable list view ──────────────────────────────────────────
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            categories.forEach { name ->
+                CategoryListItem(
+                    label = name.replace("_", " "),
+                    isSelected = name == selected,
+                    accentColor = accentColor,
+                    onClick = { onSelect(name) }
+                )
+            }
+            AddCategoryListItem(accentColor = accentColor, onClick = onAddCategory)
+        }
+    } else {
+        // ── Grid view ─────────────────────────────────────────────────────
+        val allItems = categories + ADD_CATEGORY_SENTINEL
+        val chunked = allItems.chunked(3)
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            chunked.forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { name ->
+                        if (name == ADD_CATEGORY_SENTINEL) {
+                            AddCategoryChip(
+                                accentColor = accentColor,
+                                onClick = onAddCategory,
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            CategoryChip(
+                                label = name.replace("_", " "),
+                                isSelected = name == selected,
+                                accentColor = accentColor,
+                                onClick = { onSelect(name) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
+    }
+}
+@Composable
+private fun CategoryListItem(
+    label: String,
+    isSelected: Boolean,
+    accentColor: Color,
+    onClick: () -> Unit
+) {
+    val bgColor by animateColorAsState(
+        targetValue = if (isSelected) accentColor.copy(alpha = 0.2f) else CardDark,
+        animationSpec = tween(250), label = "listItemBg"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) accentColor else Color(0xFF3A3A5C),
+        animationSpec = tween(250), label = "listItemBorder"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = if (isSelected) accentColor else White,
+            fontSize = 14.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+        )
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = accentColor,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddCategoryListItem(
+    accentColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CardDark)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add category",
+            tint = accentColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "Add Category",
+            color = accentColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -385,7 +480,6 @@ private fun CategoryChip(
     }
 }
 
-// ─── TextField Colors Helper ──────────────────────────────────────────────────
 @Composable
 private fun outlinedTextFieldColors(accentColor: Color) = OutlinedTextFieldDefaults.colors(
     focusedBorderColor   = accentColor,
@@ -397,7 +491,6 @@ private fun outlinedTextFieldColors(accentColor: Color) = OutlinedTextFieldDefau
     focusedContainerColor   = CardDark,
 )
 
-// ─── Preview ──────────────────────────────────────────────────────────────────
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddTransactionScreenPreview() {

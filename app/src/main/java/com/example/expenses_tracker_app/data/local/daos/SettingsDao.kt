@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.data.local.dao
+package com.example.expenses_tracker_app.data.local.daos
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -13,7 +13,6 @@ interface SettingsDao {
     @Query("SELECT * FROM settings LIMIT 1")
     suspend fun getSettings(): SettingsEntity?
 
-    // REPLACE handles both first-time insert and subsequent saves
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveSettings(settings: SettingsEntity)
 

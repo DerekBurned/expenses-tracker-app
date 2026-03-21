@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.data.local.dao
+package com.example.expenses_tracker_app.data.local.daos
 
 import androidx.room.Dao
 import androidx.room.Insert

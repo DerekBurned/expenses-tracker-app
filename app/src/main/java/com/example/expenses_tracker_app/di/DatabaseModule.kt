@@ -3,8 +3,8 @@ package com.example.expenses_tracker_app.di
 import android.content.Context
 import androidx.room.Room
 import com.example.expenses_tracker_app.data.local.database.AppDatabase
-import com.example.expenses_tracker_app.data.local.dao.SettingsDao
-import com.example.expenses_tracker_app.data.local.dao.TransactionDao
+import com.example.expenses_tracker_app.data.local.daos.SettingsDao
+import com.example.expenses_tracker_app.data.local.daos.TransactionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

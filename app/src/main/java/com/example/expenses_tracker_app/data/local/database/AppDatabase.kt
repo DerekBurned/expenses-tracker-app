@@ -3,8 +3,8 @@ package com.example.expenses_tracker_app.data.local.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.expenses_tracker_app.data.local.dao.SettingsDao
-import com.example.expenses_tracker_app.data.local.dao.TransactionDao
+import com.example.expenses_tracker_app.data.local.daos.SettingsDao
+import com.example.expenses_tracker_app.data.local.daos.TransactionDao
 import com.example.expenses_tracker_app.data.local.entity.SettingsEntity
 import com.example.expenses_tracker_app.data.local.entity.StringMapConverter
 import com.example.expenses_tracker_app.data.local.entity.TransactionEntity
