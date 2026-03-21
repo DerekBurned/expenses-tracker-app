@@ -20,6 +20,9 @@ fun AppNavigation() {
     fun navigate(route: AppRoute) = backStack.add(route)
     fun navigateBack() { if (backStack.size > 1) backStack.removeLastOrNull() }
 
+    // Keep a reference to the Home VM so AddExpense can trigger a refresh on it
+    // after saving — hiltViewModel() with the same key returns the same instance.
+
     NavDisplay(
         backStack       = backStack,
         onBack          = ::navigateBack,
@@ -30,7 +33,7 @@ fun AppNavigation() {
         entryProvider = entryProvider {
 
             entry<AppRoute.Home> {
-                 val vm: TransactionListViewModel = hiltViewModel()
+                val vm: TransactionListViewModel = hiltViewModel()
                 ExpenseScreen(
                     viewModel              = vm,
                     onNavigateToAddExpense = { navigate(AppRoute.AddExpense) }
@@ -38,18 +41,17 @@ fun AppNavigation() {
             }
 
             entry<AppRoute.AddExpense> {
-                val vm: AddTransactionViewModel = hiltViewModel()
+                val addVm: AddTransactionViewModel = hiltViewModel()
+
                 AddTransactionScreen(
-                    viewModel      = vm,
+                    viewModel = addVm,
                     onNavigateBack = ::navigateBack
                 )
             }
 
             entry<AppRoute.EditExpense> { /* TODO */ }
-
-            entry<AppRoute.Settings> { /* TODO */ }
-
-            entry<AppRoute.Detail> { /* TODO */ }
+            entry<AppRoute.Settings>    { /* TODO */ }
+            entry<AppRoute.Detail>      { /* TODO */ }
         }
     )
 }

@@ -4,12 +4,11 @@ interface TransactionsContract {
 
     data class State(
         val balance: Double = 0.0,
-        val transactions: List<TransactionUIModel> = emptyList(),
-        val isLoading: Boolean = false
+        val transactions: List<TransactionUIModel> = emptyList()
     )
 
     sealed class Intent {
-        object LoadTransactions : Intent()
+        object LoadTransactions : Intent()      // manual refresh button
         data class DeleteTransaction(val id: String) : Intent()
         data class TransactionClicked(val id: String) : Intent()
         object AddTransactionClicked : Intent()

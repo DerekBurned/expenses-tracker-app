@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -53,10 +54,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.expenses_tracker_app.domain.model.ExpenseType
@@ -99,7 +103,8 @@ fun AddTransactionScreen(
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { _ ->
         AddTransactionContent(
             onSubmit = { viewModel.addTransaction(it) },
-            onCancel = onNavigateBack
+            onCancel = onNavigateBack,
+            isSaving = viewModel.isSaving
         )
     }
 }
@@ -107,7 +112,8 @@ fun AddTransactionScreen(
 @Composable
 fun AddTransactionContent(
     onSubmit: (Transaction) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    isSaving: Boolean = false
 ) {
     var isExpense      by remember { mutableStateOf(true) }
     var amountText     by remember { mutableStateOf("") }
@@ -241,7 +247,9 @@ fun AddTransactionContent(
             Spacer(Modifier.height(40.dp))
 
             Button(
-                onClick = {
+                // FIX 1: disabled while saving — prevents multiple taps queuing
+                // multiple inserts before the screen has a chance to close
+                onClick  = {
                     val amount = amountText.toDoubleOrNull()
                     if (amount == null || description.isBlank()) {
                         showError = true
@@ -267,18 +275,27 @@ fun AddTransactionContent(
                     }
                     onSubmit(transaction)
                 },
+                enabled  = !isSaving,   // disabled while save is in flight
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape  = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) {
-                Text(
-                    text       = if (isExpense) "Add Expense" else "Add Income",
-                    color      = White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 16.sp
-                )
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier  = Modifier.size(22.dp),
+                        color     = White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text       = if (isExpense) "Add Expense" else "Add Income",
+                        color      = White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 16.sp
+                    )
+                }
             }
 
             Spacer(Modifier.height(40.dp))
@@ -286,39 +303,53 @@ fun AddTransactionContent(
     }
 }
 
+// ─── Type toggle ──────────────────────────────────────────────────────────────
+
 @Composable
 private fun TypeToggle(
     isExpense: Boolean,
     accentColor: Color,
     onToggle: (Boolean) -> Unit
 ) {
+    // FIX 2: measure the actual track width at runtime so the pill offset
+    // is always exactly half the track, regardless of screen density or size.
+    // The old hardcoded 160.dp was based on an assumed screen width and caused
+    // the pill to only slide within the first half of the toggle on many devices.
+    var trackWidthPx by remember { mutableStateOf(0) }
+    val density      = LocalDensity.current
+    val halfTrack: Dp = with(density) { (trackWidthPx / 2).toDp() }
+
+    val pillOffset by animateDpAsState(
+        targetValue   = if (isExpense) 0.dp else halfTrack,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label         = "pill"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(CardDark)
+            .onGloballyPositioned { coords -> trackWidthPx = coords.size.width }
     ) {
-        val pillOffset by animateDpAsState(
-            targetValue   = if (isExpense) 0.dp else 160.dp,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            label         = "pill"
-        )
+        // Pill — occupies exactly half the track width
         Box(
             modifier = Modifier
                 .padding(4.dp)
-                .width(160.dp)
+                .fillMaxWidth(0.5f)          // always exactly 50 % of the track
                 .fillMaxHeight()
                 .offset(x = pillOffset)
                 .clip(RoundedCornerShape(13.dp))
                 .background(accentColor)
         )
+
         Row(
             modifier              = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            ToggleLabel(label = "Expense", active = isExpense, onClick = { onToggle(true) })
+            ToggleLabel(label = "Expense", active = isExpense,  onClick = { onToggle(true) })
             ToggleLabel(label = "Income",  active = !isExpense, onClick = { onToggle(false) })
         }
     }
@@ -349,6 +380,8 @@ private fun RowScope.ToggleLabel(label: String, active: Boolean, onClick: () -> 
         textAlign  = TextAlign.Center
     )
 }
+
+// ─── Category grid ────────────────────────────────────────────────────────────
 
 @Composable
 private fun CategoryGrid(
@@ -469,9 +502,9 @@ private fun AddCategoryChip(
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text      = "Add",
-                color     = accentColor,
-                fontSize  = 11.sp,
+                text       = "Add",
+                color      = accentColor,
+                fontSize   = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 textAlign  = TextAlign.Center
             )
