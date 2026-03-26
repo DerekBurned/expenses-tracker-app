@@ -33,11 +33,15 @@ class AppLocalRepositoryImpl @Inject constructor(
     override suspend fun saveSettings(settings: SettingsEntity) {
         settingsDao.saveSettings(settings)
     }
-
+    override suspend fun getCustomCategories(): Map<String, String> {
+       return settingsDao.getCustomCategories()
+    }
     override suspend fun updateSettings(settings: SettingsEntity) {
         settingsDao.updateSettings(settings)
     }
 
     override suspend fun getUnsyncedTransactions(): List<TransactionEntity> =
         transactionDao.getUnsyncedTransactions()
+
+
 }

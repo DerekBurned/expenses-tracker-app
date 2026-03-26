@@ -18,4 +18,8 @@ interface SettingsDao {
 
     @Update
     suspend fun updateSettings(settings: SettingsEntity)
+
+    @Query("SELECT customCategories FROM settings LIMIT 1")
+    suspend fun getCustomCategories(): Map<String, String>
+
 }
