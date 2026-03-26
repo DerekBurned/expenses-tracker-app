@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.presentation.features.expense.ui.addTransaction
+package com.example.expenses_tracker_app.presentation.features.addtransaction
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -36,7 +36,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -59,17 +58,19 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.expenses_tracker_app.domain.model.ExpenseType
 import com.example.expenses_tracker_app.domain.model.IncomeType
-import com.example.expenses_tracker_app.domain.model.Transaction
+import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewEffect
+import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewIntent
+import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewState
 import com.example.expenses_tracker_app.presentation.features.expense.ui.AddNewCategoryScreen.AddNewCategoryDialog
-import com.example.expenses_tracker_app.presentation.features.expense.ui.viewModels.AddTransactionViewModel
-import java.time.LocalDate
-import java.util.UUID
+
+// ── Colour tokens ─────────────────────────────────────────────────────────────
 
 private val IncomeGreen = Color(0xFF00C896)
 private val ExpenseRed  = Color(0xFFFF5C5C)
@@ -80,57 +81,53 @@ private val White       = Color(0xFFFFFFFF)
 
 private const val ADD_CATEGORY_SENTINEL = "__ADD__"
 
-private val expenseCategories = ExpenseType.entries.toList()
-private val incomeCategories  = IncomeType.entries.toList()
+// ── Entry point ───────────────────────────────────────────────────────────────
 
+/**
+ * Injects the ViewModel, collects state, and wires one-time effects.
+ * Everything below this composable is stateless.
+ */
 @Composable
 fun AddTransactionScreen(
-    viewModel: AddTransactionViewModel,
+    viewModel: AddTransactionViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
+    val state by viewModel.viewState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+        viewModel.viewEffect.collect { effect ->
             when (effect) {
-                is AddTransactionViewModel.Effect.NavigateBack ->
-                    onNavigateBack()
-                is AddTransactionViewModel.Effect.ShowError ->
-                    snackbarHostState.showSnackbar(effect.message)
+                is ViewEffect.NavigateBack  -> onNavigateBack()
+                is ViewEffect.ShowSnackbar  -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { _ ->
         AddTransactionContent(
-            onSubmit = { viewModel.addTransaction(it) },
-            onCancel = onNavigateBack,
-            isSaving = viewModel.isSaving
+            state    = state,
+            onIntent = viewModel::handleIntent
         )
     }
 }
 
+// ── Stateless content ─────────────────────────────────────────────────────────
+
 @Composable
 fun AddTransactionContent(
-    onSubmit: (Transaction) -> Unit,
-    onCancel: () -> Unit,
-    isSaving: Boolean = false
+    state: ViewState,
+    onIntent: (ViewIntent) -> Unit
 ) {
+    // The only local state: whether the add-category dialog is open.
+    // This is purely ephemeral presentation — no business logic depends on it.
+    // The *result* (the category name) travels upward as a ViewIntent.
     var showAddCategoryDialog by remember { mutableStateOf(false) }
-    var isExpense      by remember { mutableStateOf(true) }
-    var amountText     by remember { mutableStateOf("") }
-    var description    by remember { mutableStateOf("") }
-    var selectedExpCat by remember { mutableStateOf(expenseCategories.first()) }
-    var selectedIncCat by remember { mutableStateOf(incomeCategories.first()) }
-    var showError      by remember { mutableStateOf(false) }
-    //TESTING
-    var customExpenseCategories by remember { mutableStateOf<List<String>>(emptyList()) }
-    var customIncomeCategories  by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val accentColor by animateColorAsState(
-        targetValue   = if (isExpense) ExpenseRed else IncomeGreen,
+        targetValue   = if (state.isExpense) ExpenseRed else IncomeGreen,
         animationSpec = tween(400),
-        label         = "accent"
+        label         = "accentColor"
     )
 
     Box(
@@ -146,11 +143,12 @@ fun AddTransactionContent(
         ) {
             Spacer(Modifier.height(56.dp))
 
+            // ── Header ───────────────────────────────────────────────────────
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth()
             ) {
-                IconButton(onClick = onCancel) {
+                IconButton(onClick = { onIntent(ViewIntent.BackClicked) }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = White)
                 }
                 Text(
@@ -164,23 +162,25 @@ fun AddTransactionContent(
 
             Spacer(Modifier.height(32.dp))
 
+            // ── Type toggle ──────────────────────────────────────────────────
             TypeToggle(
-                isExpense   = isExpense,
+                isExpense   = state.isExpense,
                 accentColor = accentColor,
-                onToggle    = { isExpense = it; showError = false }
+                onToggle    = { onIntent(ViewIntent.TypeToggled(it)) }
             )
 
             Spacer(Modifier.height(32.dp))
 
-            Text("Amount", color = SubtleText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            // ── Amount ───────────────────────────────────────────────────────
+            FieldLabel("Amount")
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value         = amountText,
-                onValueChange = { new -> amountText = new.filter { c -> c.isDigit() || c == '.' } },
+                value         = state.amountText,
+                onValueChange = { onIntent(ViewIntent.AmountChanged(it)) },
                 placeholder   = { Text("0.00", color = SubtleText) },
                 leadingIcon   = {
                     Text(
-                        "$",
+                        text       = "$",
                         color      = accentColor,
                         fontWeight = FontWeight.Bold,
                         fontSize   = 18.sp,
@@ -189,124 +189,97 @@ fun AddTransactionContent(
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine      = true,
-                isError         = showError && amountText.isBlank(),
+                isError         = state.amountError,
                 colors          = outlinedTextFieldColors(accentColor),
                 shape           = RoundedCornerShape(14.dp),
                 modifier        = Modifier.fillMaxWidth(),
                 textStyle       = LocalTextStyle.current.copy(color = White, fontSize = 18.sp)
             )
-            if (showError && amountText.isBlank()) {
-                Text(
-                    "Please enter an amount",
-                    color    = ExpenseRed,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-                )
+            if (state.amountError) {
+                ErrorText("Please enter an amount")
             }
 
             Spacer(Modifier.height(20.dp))
 
-            Text("Description", color = SubtleText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            // ── Description ──────────────────────────────────────────────────
+            FieldLabel("Description")
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value         = description,
-                onValueChange = { description = it },
+                value         = state.description,
+                onValueChange = { onIntent(ViewIntent.DescriptionChanged(it)) },
                 placeholder   = { Text("What was this for?", color = SubtleText) },
                 singleLine    = true,
-                isError       = showError && description.isBlank(),
+                isError       = state.descriptionError,
                 colors        = outlinedTextFieldColors(accentColor),
                 shape         = RoundedCornerShape(14.dp),
                 modifier      = Modifier.fillMaxWidth(),
                 textStyle     = LocalTextStyle.current.copy(color = White)
             )
-            if (showError && description.isBlank()) {
-                Text(
-                    "Please enter a description",
-                    color    = ExpenseRed,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-                )
+            if (state.descriptionError) {
+                ErrorText("Please enter a description")
             }
 
             Spacer(Modifier.height(24.dp))
 
-            Text("Category", color = SubtleText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            // ── Category ─────────────────────────────────────────────────────
+            FieldLabel("Category")
             Spacer(Modifier.height(12.dp))
 
-            if (isExpense) {
+            if (state.isExpense) {
+                val customExpenseNames = state.customCategories
+                    .filterKeys { it.startsWith("EXPENSE_") }
+                    .values.toList()
                 CategoryGrid(
-                    categories    = expenseCategories.map { it.name } + customExpenseCategories,
-                    selected      = selectedExpCat.name,
-                    accentColor   = accentColor,
-                    onAddCategory = { showAddCategoryDialog = true },
-                    onSelect      = { name ->
-                        selectedExpCat = expenseCategories.firstOrNull { it.name == name }
-                            ?: expenseCategories.first()
+                    builtInCategories = ExpenseType.entries.map { it.name },
+                    customCategories  = customExpenseNames,
+                    selected          = state.selectedExpenseCategory.name,
+                    accentColor       = accentColor,
+                    onAddCategory     = { showAddCategoryDialog = true },
+                    onSelect          = { name ->
+                        val type = ExpenseType.entries.firstOrNull { it.name == name }
+                            ?: ExpenseType.DEFAULT
+                        onIntent(ViewIntent.ExpenseCategorySelected(type))
                     }
                 )
             } else {
+                val customIncomeNames = state.customCategories
+                    .filterKeys { it.startsWith("INCOME_") }
+                    .values.toList()
                 CategoryGrid(
-                    categories    = incomeCategories.map { it.name } + customIncomeCategories,
-                    selected      = selectedIncCat.name,
-                    accentColor   = accentColor,
-                    onAddCategory = { showAddCategoryDialog = true },
-                    onSelect      = { name ->
-                        selectedIncCat = incomeCategories.firstOrNull { it.name == name }
-                            ?: incomeCategories.first()
+                    builtInCategories = IncomeType.entries.map { it.name },
+                    customCategories  = customIncomeNames,
+                    selected          = state.selectedIncomeCategory.name,
+                    accentColor       = accentColor,
+                    onAddCategory     = { showAddCategoryDialog = true },
+                    onSelect          = { name ->
+                        val type = IncomeType.entries.firstOrNull { it.name == name }
+                            ?: IncomeType.OTHER
+                        onIntent(ViewIntent.IncomeCategorySelected(type))
                     }
                 )
             }
 
-// Dialog
-
-
             Spacer(Modifier.height(40.dp))
 
+            // ── Submit button ────────────────────────────────────────────────
             Button(
-                // FIX 1: disabled while saving — prevents multiple taps queuing
-                // multiple inserts before the screen has a chance to close
-                onClick  = {
-                    val amount = amountText.toDoubleOrNull()
-                    if (amount == null || description.isBlank()) {
-                        showError = true
-                        return@Button
-                    }
-                    val finalAmount = if (isExpense) -amount else amount
-                    val transaction: Transaction = if (isExpense) {
-                        Transaction.Expense(
-                            localId     = UUID.randomUUID().toString(),
-                            amount      = finalAmount,
-                            description = description,
-                            date        = LocalDate.now().toString(),
-                            expenseType = selectedExpCat
-                        )
-                    } else {
-                        Transaction.Income(
-                            localId     = UUID.randomUUID().toString(),
-                            amount      = finalAmount,
-                            description = description,
-                            date        = LocalDate.now().toString(),
-                            incomeType  = selectedIncCat
-                        )
-                    }
-                    onSubmit(transaction)
-                },
-                enabled  = !isSaving,   // disabled while save is in flight
+                onClick  = { onIntent(ViewIntent.SubmitClicked) },
+                enabled  = !state.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape  = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) {
-                if (isSaving) {
+                if (state.isSaving) {
                     CircularProgressIndicator(
-                        modifier  = Modifier.size(22.dp),
-                        color     = White,
+                        modifier    = Modifier.size(22.dp),
+                        color       = White,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
-                        text       = if (isExpense) "Add Expense" else "Add Income",
+                        text       = if (state.isExpense) "Add Expense" else "Add Income",
                         color      = White,
                         fontWeight = FontWeight.Bold,
                         fontSize   = 16.sp
@@ -315,27 +288,23 @@ fun AddTransactionContent(
             }
 
             Spacer(Modifier.height(40.dp))
-
         }
+
+        // ── Add-category dialog ───────────────────────────────────────────────
         if (showAddCategoryDialog) {
             AddNewCategoryDialog(
-                isExpense = isExpense,
+                isExpense = state.isExpense,
                 onDismiss = { showAddCategoryDialog = false },
                 onConfirm = { name ->
-                    if (isExpense) {
-                        customExpenseCategories = customExpenseCategories + name
-                    } else {
-                        customIncomeCategories = customIncomeCategories + name
-                    }
+                    onIntent(ViewIntent.AddCustomCategory(name))
                     showAddCategoryDialog = false
                 }
             )
         }
-
     }
 }
 
-// ─── Type toggle ──────────────────────────────────────────────────────────────
+// ── Type toggle ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun TypeToggle(
@@ -343,10 +312,6 @@ private fun TypeToggle(
     accentColor: Color,
     onToggle: (Boolean) -> Unit
 ) {
-    // FIX 2: measure the actual track width at runtime so the pill offset
-    // is always exactly half the track, regardless of screen density or size.
-    // The old hardcoded 160.dp was based on an assumed screen width and caused
-    // the pill to only slide within the first half of the toggle on many devices.
     var trackWidthPx by remember { mutableStateOf(0) }
     val density      = LocalDensity.current
     val halfTrack: Dp = with(density) { (trackWidthPx / 2).toDp() }
@@ -354,7 +319,7 @@ private fun TypeToggle(
     val pillOffset by animateDpAsState(
         targetValue   = if (isExpense) 0.dp else halfTrack,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label         = "pill"
+        label         = "pillOffset"
     )
 
     Box(
@@ -365,17 +330,15 @@ private fun TypeToggle(
             .background(CardDark)
             .onGloballyPositioned { coords -> trackWidthPx = coords.size.width }
     ) {
-        // Pill — occupies exactly half the track width
         Box(
             modifier = Modifier
                 .padding(4.dp)
-                .fillMaxWidth(0.5f)          // always exactly 50 % of the track
+                .fillMaxWidth(0.5f)
                 .fillMaxHeight()
                 .offset(x = pillOffset)
                 .clip(RoundedCornerShape(13.dp))
                 .background(accentColor)
         )
-
         Row(
             modifier              = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -388,11 +351,15 @@ private fun TypeToggle(
 }
 
 @Composable
-private fun RowScope.ToggleLabel(label: String, active: Boolean, onClick: () -> Unit) {
+private fun RowScope.ToggleLabel(
+    label: String,
+    active: Boolean,
+    onClick: () -> Unit
+) {
     val textColor by animateColorAsState(
         targetValue   = if (active) White else SubtleText,
         animationSpec = tween(300),
-        label         = "toggleText"
+        label         = "toggleTextColor"
     )
     val scale by animateFloatAsState(
         targetValue   = if (active) 1f else 0.92f,
@@ -404,28 +371,31 @@ private fun RowScope.ToggleLabel(label: String, active: Boolean, onClick: () -> 
         color      = textColor,
         fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
         fontSize   = 14.sp,
+        textAlign  = TextAlign.Center,
         modifier   = Modifier
             .weight(1f)
             .scale(scale)
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        textAlign  = TextAlign.Center
+            .padding(vertical = 12.dp)
     )
 }
 
-// ─── Category grid ────────────────────────────────────────────────────────────
+// ── Category grid ─────────────────────────────────────────────────────────────
 
 @Composable
 private fun CategoryGrid(
-    categories: List<String>,
+    builtInCategories: List<String>,
+    customCategories: List<String>,
     selected: String,
     accentColor: Color,
     onSelect: (String) -> Unit,
-    onAddCategory: () -> Unit = {}
+    onAddCategory: () -> Unit
 ) {
-    if (categories.size > 9) {
+    val all = builtInCategories + customCategories
+
+    if (all.size > 9) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            categories.forEach { name ->
+            all.forEach { name ->
                 CategoryListItem(
                     label       = name.replace("_", " "),
                     isSelected  = name == selected,
@@ -436,8 +406,7 @@ private fun CategoryGrid(
             AddCategoryListItem(accentColor = accentColor, onClick = onAddCategory)
         }
     } else {
-        val allItems = categories + ADD_CATEGORY_SENTINEL
-        val rows     = allItems.chunked(3)
+        val rows = (all + ADD_CATEGORY_SENTINEL).chunked(3)
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             rows.forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -476,12 +445,12 @@ private fun CategoryChip(
     val bgColor by animateColorAsState(
         targetValue   = if (isSelected) accentColor.copy(alpha = 0.2f) else CardDark,
         animationSpec = tween(250),
-        label         = "chipBg"
+        label         = "chipBgColor"
     )
     val textColor by animateColorAsState(
         targetValue   = if (isSelected) accentColor else SubtleText,
         animationSpec = tween(250),
-        label         = "chipText"
+        label         = "chipTextColor"
     )
     val scale by animateFloatAsState(
         targetValue   = if (isSelected) 1.04f else 1f,
@@ -537,8 +506,7 @@ private fun AddCategoryChip(
                 text       = "Add",
                 color      = accentColor,
                 fontSize   = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign  = TextAlign.Center
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -554,7 +522,7 @@ private fun CategoryListItem(
     val bgColor by animateColorAsState(
         targetValue   = if (isSelected) accentColor.copy(alpha = 0.2f) else CardDark,
         animationSpec = tween(250),
-        label         = "listBg"
+        label         = "listItemBgColor"
     )
     Row(
         modifier = Modifier
@@ -584,7 +552,10 @@ private fun CategoryListItem(
 }
 
 @Composable
-private fun AddCategoryListItem(accentColor: Color, onClick: () -> Unit) {
+private fun AddCategoryListItem(
+    accentColor: Color,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -611,6 +582,28 @@ private fun AddCategoryListItem(accentColor: Color, onClick: () -> Unit) {
     }
 }
 
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text       = text,
+        color      = SubtleText,
+        fontSize   = 12.sp,
+        fontWeight = FontWeight.Medium
+    )
+}
+
+@Composable
+private fun ErrorText(message: String) {
+    Text(
+        text     = message,
+        color    = ExpenseRed,
+        fontSize = 11.sp,
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+    )
+}
+
 @Composable
 private fun outlinedTextFieldColors(accentColor: Color) = OutlinedTextFieldDefaults.colors(
     focusedBorderColor      = accentColor,
@@ -621,11 +614,3 @@ private fun outlinedTextFieldColors(accentColor: Color) = OutlinedTextFieldDefau
     unfocusedContainerColor = CardDark,
     focusedContainerColor   = CardDark
 )
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun AddTransactionContentPreview() {
-    MaterialTheme {
-        AddTransactionContent(onSubmit = {}, onCancel = {})
-    }
-}
