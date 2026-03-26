@@ -1,15 +1,15 @@
-package com.example.expenses_tracker_app.domain.usecase
+package com.example.expenses_tracker_app.domain.usecase.transaction
 
 import com.example.expenses_tracker_app.domain.model.Transaction
-import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
+import com.example.expenses_tracker_app.domain.repository.IAppRepository
 import javax.inject.Inject
 
-class GetAllExpensesUseCase @Inject constructor(
-    private val expenseRepository: IExpenseRepository
+class GetAllTransactionsUseCase @Inject constructor(
+    private val appRepository: IAppRepository
 ) {
     // FIXED: was calling getAllExpenses() which doesn't exist on IExpenseRepository.
     // The interface method is getAllTransaction().
     suspend operator fun invoke(): List<Transaction> {
-        return expenseRepository.getAllTransaction()
+        return appRepository.getAllTransaction()
     }
 }

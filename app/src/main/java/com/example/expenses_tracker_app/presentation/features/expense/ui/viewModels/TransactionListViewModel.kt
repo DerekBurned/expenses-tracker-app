@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.data.local.entity.toDomain
 import com.example.expenses_tracker_app.data.local.repository.AppLocalRepositoryImpl
 import com.example.expenses_tracker_app.domain.model.Transaction
-import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
+import com.example.expenses_tracker_app.domain.repository.IAppRepository
 import com.example.expenses_tracker_app.presentation.features.expense.TransactionUIModel
 import com.example.expenses_tracker_app.presentation.features.expense.TransactionsContract
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
-    private val repo: IExpenseRepository,
+    private val repo: IAppRepository,
     private val localRepo: AppLocalRepositoryImpl
 ) : BaseMviViewModel<
         TransactionsContract.State,

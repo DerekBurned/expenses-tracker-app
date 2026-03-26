@@ -5,19 +5,19 @@ import com.example.expenses_tracker_app.data.local.entity.toDomain
 import com.example.expenses_tracker_app.data.local.entity.toEntity
 import com.example.expenses_tracker_app.data.local.repository.AppLocalRepositoryImpl
 import com.example.expenses_tracker_app.data.remote.ExpenseApi
-import com.example.expenses_tracker_app.data.remote.TransactionDTO
 import com.example.expenses_tracker_app.data.remote.toEntity
+import com.example.expenses_tracker_app.domain.model.Settings
 import com.example.expenses_tracker_app.domain.model.Transaction
-import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
+import com.example.expenses_tracker_app.domain.repository.IAppRepository
 import com.example.expenses_tracker_app.utils.internetConnectionObserver.NetworkObserver
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-class TransactionsRepositoryImpl @Inject constructor(
+class AppRepositoryImpl @Inject constructor(
     private val localRepo: AppLocalRepositoryImpl,
     private val api: ExpenseApi,
     private val networkObserver: NetworkObserver
-) : IExpenseRepository {
+) : IAppRepository {
 
     private suspend fun isOnline(): Boolean =
         networkObserver.isConnected.first()
@@ -69,7 +69,32 @@ class TransactionsRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTransaction(localId: String): Result<Boolean> {
         localRepo.deleteTransaction(localId)
-        try { api.deleteExpense(localId) } catch (_: Exception) { /* best effort */ }
+        try { api.deleteTransaction(localId) } catch (_: Exception) { /* best effort */ }
         return Result.success(true)
     }
+
+    override suspend fun getSettings(): Settings {
+        if (isOnline()) {
+        try {
+            api.getSettings().let { dto ->
+                localRepo.saveSettings(dto.toEntity())
+            }
+        } catch (_: Exception) {
+        }
+        }
+        return localRepo.getSettings()?.toDomain() ?: TODO()
+    }
+
+    override suspend fun saveSettings(settings: Settings) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getCustomCategories(): Map<String, String> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateSettings(settings: Settings) {
+        TODO("Not yet implemented")
+    }
+
 }

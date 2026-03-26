@@ -13,5 +13,5 @@ interface IAppLocalRepository {
     suspend fun saveSettings(settings: SettingsEntity)
     suspend fun updateSettings(settings: SettingsEntity)
     suspend fun getUnsyncedTransactions(): List<TransactionEntity>
-    suspend fun getCustomCategories(): Map<String, String>
+    suspend fun getCustomCategories(): Map<String, String>?
 }

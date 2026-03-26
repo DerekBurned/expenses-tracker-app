@@ -3,11 +3,10 @@ package com.example.expenses_tracker_app.presentation.features.expense.ui.viewMo
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.data.worker.SyncScheduler
 import com.example.expenses_tracker_app.domain.model.Transaction
-import com.example.expenses_tracker_app.domain.usecase.AddTransactionUseCase
+import com.example.expenses_tracker_app.domain.usecase.transaction.AddTransactionUseCase
 import com.example.expenses_tracker_app.presentation.features.expense.ui.addTransaction.AddTransactionContract
 import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

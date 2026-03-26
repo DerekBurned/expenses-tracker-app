@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import com.example.expenses_tracker_app.domain.model.ExpenseType
 import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.domain.model.Transaction
+import com.example.expenses_tracker_app.presentation.features.expense.ui.AddNewCategoryScreen.AddNewCategoryDialog
 import com.example.expenses_tracker_app.presentation.features.expense.ui.viewModels.AddTransactionViewModel
 import java.time.LocalDate
 import java.util.UUID
@@ -115,12 +116,16 @@ fun AddTransactionContent(
     onCancel: () -> Unit,
     isSaving: Boolean = false
 ) {
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
     var isExpense      by remember { mutableStateOf(true) }
     var amountText     by remember { mutableStateOf("") }
     var description    by remember { mutableStateOf("") }
     var selectedExpCat by remember { mutableStateOf(expenseCategories.first()) }
     var selectedIncCat by remember { mutableStateOf(incomeCategories.first()) }
     var showError      by remember { mutableStateOf(false) }
+    //TESTING
+    var customExpenseCategories by remember { mutableStateOf<List<String>>(emptyList()) }
+    var customIncomeCategories  by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val accentColor by animateColorAsState(
         targetValue   = if (isExpense) ExpenseRed else IncomeGreen,
@@ -230,19 +235,30 @@ fun AddTransactionContent(
 
             if (isExpense) {
                 CategoryGrid(
-                    categories  = expenseCategories.map { it.name },
-                    selected    = selectedExpCat.name,
-                    accentColor = accentColor,
-                    onSelect    = { name -> selectedExpCat = expenseCategories.first { it.name == name } }
+                    categories    = expenseCategories.map { it.name } + customExpenseCategories,
+                    selected      = selectedExpCat.name,
+                    accentColor   = accentColor,
+                    onAddCategory = { showAddCategoryDialog = true },
+                    onSelect      = { name ->
+                        selectedExpCat = expenseCategories.firstOrNull { it.name == name }
+                            ?: expenseCategories.first()
+                    }
                 )
             } else {
                 CategoryGrid(
-                    categories  = incomeCategories.map { it.name },
-                    selected    = selectedIncCat.name,
-                    accentColor = accentColor,
-                    onSelect    = { name -> selectedIncCat = incomeCategories.first { it.name == name } }
+                    categories    = incomeCategories.map { it.name } + customIncomeCategories,
+                    selected      = selectedIncCat.name,
+                    accentColor   = accentColor,
+                    onAddCategory = { showAddCategoryDialog = true },
+                    onSelect      = { name ->
+                        selectedIncCat = incomeCategories.firstOrNull { it.name == name }
+                            ?: incomeCategories.first()
+                    }
                 )
             }
+
+// Dialog
+
 
             Spacer(Modifier.height(40.dp))
 
@@ -299,7 +315,23 @@ fun AddTransactionContent(
             }
 
             Spacer(Modifier.height(40.dp))
+
         }
+        if (showAddCategoryDialog) {
+            AddNewCategoryDialog(
+                isExpense = isExpense,
+                onDismiss = { showAddCategoryDialog = false },
+                onConfirm = { name ->
+                    if (isExpense) {
+                        customExpenseCategories = customExpenseCategories + name
+                    } else {
+                        customIncomeCategories = customIncomeCategories + name
+                    }
+                    showAddCategoryDialog = false
+                }
+            )
+        }
+
     }
 }
 

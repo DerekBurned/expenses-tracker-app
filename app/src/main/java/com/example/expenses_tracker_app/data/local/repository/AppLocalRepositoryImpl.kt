@@ -15,30 +15,30 @@ class AppLocalRepositoryImpl @Inject constructor(
     override fun getAllTransaction(): Flow<List<TransactionEntity>> =
         transactionDao.getAllTransactions()
 
-    override suspend fun addTransaction(transaction: TransactionEntity) {
+    override suspend fun addTransaction(transaction: TransactionEntity) =
         transactionDao.insertTransaction(transaction)
-    }
 
-    override suspend fun markAsSynced(ids: List<String>) {
+
+    override suspend fun markAsSynced(ids: List<String>) =
         transactionDao.markAsSynced(ids)
-    }
 
-    override suspend fun deleteTransaction(id: String) {
+
+    override suspend fun deleteTransaction(id: String) =
         transactionDao.deleteTransaction(id)
-    }
+
 
     override suspend fun getSettings(): SettingsEntity? =
         settingsDao.getSettings()
 
-    override suspend fun saveSettings(settings: SettingsEntity) {
+    override suspend fun saveSettings(settings: SettingsEntity) =
         settingsDao.saveSettings(settings)
-    }
-    override suspend fun getCustomCategories(): Map<String, String> {
-       return settingsDao.getCustomCategories()
-    }
-    override suspend fun updateSettings(settings: SettingsEntity) {
+
+    override suspend fun getCustomCategories(): Map<String, String>? =
+        getSettings()?.customCategories
+
+    override suspend fun updateSettings(settings: SettingsEntity) =
         settingsDao.updateSettings(settings)
-    }
+
 
     override suspend fun getUnsyncedTransactions(): List<TransactionEntity> =
         transactionDao.getUnsyncedTransactions()

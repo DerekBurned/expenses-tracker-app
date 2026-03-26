@@ -1,9 +1,9 @@
 package com.example.expenses_tracker_app.di
 
-import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
-import com.example.expenses_tracker_app.domain.usecase.AddTransactionUseCase
-import com.example.expenses_tracker_app.domain.usecase.GetAllExpensesUseCase
-import com.example.expenses_tracker_app.domain.usecase.SyncAllExpensesUseCase
+import com.example.expenses_tracker_app.domain.repository.IAppRepository
+import com.example.expenses_tracker_app.domain.usecase.transaction.AddTransactionUseCase
+import com.example.expenses_tracker_app.domain.usecase.transaction.GetAllTransactionsUseCase
+import com.example.expenses_tracker_app.domain.usecase.transaction.SyncAllTransactionsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,14 +19,14 @@ import dagger.hilt.components.SingletonComponent
 object UseCaseModule {
 
     @Provides
-    fun provideGetAllExpensesUseCase(repository: IExpenseRepository): GetAllExpensesUseCase =
-        GetAllExpensesUseCase(repository)
+    fun provideGetAllExpensesUseCase(repository: IAppRepository): GetAllTransactionsUseCase =
+        GetAllTransactionsUseCase(repository)
 
     @Provides
-    fun provideSyncAllExpensesUseCase(repository: IExpenseRepository): SyncAllExpensesUseCase =
-        SyncAllExpensesUseCase(repository)
+    fun provideSyncAllExpensesUseCase(repository: IAppRepository): SyncAllTransactionsUseCase =
+        SyncAllTransactionsUseCase(repository)
 
     @Provides
-    fun provideAddTransactionUseCase(repository: IExpenseRepository): AddTransactionUseCase =
+    fun provideAddTransactionUseCase(repository: IAppRepository): AddTransactionUseCase =
         AddTransactionUseCase(repository)
 }

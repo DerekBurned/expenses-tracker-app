@@ -1,7 +1,7 @@
-package com.example.expenses_tracker_app.domain.usecase
+package com.example.expenses_tracker_app.domain.usecase.transaction
 
 import com.example.expenses_tracker_app.domain.model.Transaction
-import com.example.expenses_tracker_app.domain.repository.IExpenseRepository
+import com.example.expenses_tracker_app.domain.repository.IAppRepository
 import javax.inject.Inject
 
 /**
@@ -13,9 +13,9 @@ import javax.inject.Inject
  * The ViewModel should inject this use case instead of IAppLocalRepository.
  */
 class AddTransactionUseCase @Inject constructor(
-    private val expenseRepository: IExpenseRepository
+    private val appRepository: IAppRepository
 ) {
     suspend operator fun invoke(transaction: Transaction) {
-        expenseRepository.addTransaction(transaction)
+        appRepository.addTransaction(transaction)
     }
 }

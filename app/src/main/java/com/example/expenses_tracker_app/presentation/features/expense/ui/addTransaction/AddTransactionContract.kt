@@ -3,6 +3,7 @@ package com.example.expenses_tracker_app.presentation.features.expense.ui.addTra
 sealed class AddTransactionContract {
     data class State(
         val isExpense: Boolean = true,
+        val customCategories : Map<String, String> = emptyMap()
     )
 
     sealed class Intent {

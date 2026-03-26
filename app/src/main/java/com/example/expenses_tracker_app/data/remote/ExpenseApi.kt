@@ -9,16 +9,20 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ExpenseApi {
-    @GET("api/expenses")
+    @GET("api/transactions")
     suspend fun getAllExpenses(
         @Query("sortBy") sortBy: String = "date"
     ): List<TransactionDTO>
 
-    @POST("api/expenses/sync")
-    suspend fun syncExpenses(@Body expenses: List<TransactionDTO>): Response<String>
+    @POST("api/transactions/sync")
+    suspend fun syncExpenses(@Body Transactions: List<TransactionDTO>): Response<String>
 
-    @DELETE("api/expenses/{id}")
-    suspend fun deleteExpense(@Path("id") id: String): Response<String>
-    @POST("api/categories/sync")
+    @DELETE("api/transactions/{id}")
+    suspend fun deleteTransaction(@Path("id") id: String): Response<String>
+    @POST("api/settings/sync")
     suspend fun syncSettings(@Body categories: List<SettingsDTO>): Response<String>
+    @GET("api/settings/")
+    suspend fun getSettings(): SettingsDTO
+
+
 }
