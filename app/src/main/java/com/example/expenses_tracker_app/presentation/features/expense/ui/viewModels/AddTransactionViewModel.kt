@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.data.worker.SyncScheduler
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.example.expenses_tracker_app.domain.usecase.AddTransactionUseCase
+import com.example.expenses_tracker_app.presentation.features.expense.ui.addTransaction.AddTransactionContract
+import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,7 +20,11 @@ import javax.inject.Inject
 class AddTransactionViewModel @Inject constructor(
     private val addTransactionUseCase: AddTransactionUseCase,
     private val syncScheduler: SyncScheduler
-) : ViewModel() {
+) : BaseMviViewModel<
+        AddTransactionContract.State,
+        AddTransactionContract.Effect,
+        AddTransactionContract.Intent
+        >(initialState = AddTransactionContract.State()) {
 
     sealed class Effect {
         object NavigateBack : Effect()
@@ -50,5 +56,9 @@ class AddTransactionViewModel @Inject constructor(
                 _effect.emit(Effect.ShowError(e.message ?: "Failed to save transaction"))
             }
         }
+    }
+
+    override fun onIntent(intent: AddTransactionContract.Effect) {
+        TODO("Not yet implemented")
     }
 }
