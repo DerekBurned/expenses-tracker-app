@@ -69,11 +69,11 @@ class AppRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTransaction(localId: String): Result<Boolean> {
-        if(localRepo.getTransactionById(localId) != null) {
-            if(api.checkIfTransactionExists(localId).body() == true){
-                 api.deleteTransaction(localId)
+        if (localRepo.getTransactionById(localId) != null) {
+            if (api.checkIfTransactionExists(localId).body() == true) {
+                api.deleteTransaction(localId)
             }
-             localRepo.deleteTransaction(localId)
+            localRepo.deleteTransaction(localId)
             return Result.success(true)
         }
         return Result.failure(Exception("Transaction not found"))
@@ -81,7 +81,7 @@ class AppRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTransactionByID(id: String): Transaction {
-        if(localRepo.getTransactionById(id) != null) {
+        if (localRepo.getTransactionById(id) != null) {
             return localRepo.getTransactionById(id)!!.toDomain()
         }
         return api.getTransactionByID(id).toEntity().toDomain().also {
@@ -93,15 +93,15 @@ class AppRepositoryImpl @Inject constructor(
                     // silently fail
                 }
 
+            }
+
+
         }
-
-
-    }
     }
 
     override suspend fun updateTransaction(transaction: Transaction): Result<Boolean> {
         localRepo.updateTransaction(transaction.toEntity())
-        if(api.checkIfTransactionExists(transaction.localId).body() == true) {
+        if (api.checkIfTransactionExists(transaction.localId).body() == true) {
             try {
                 api.updateTransaction(transaction.localId, transaction.toEntity().toDTO())
             } catch (_: Exception) {
@@ -113,12 +113,12 @@ class AppRepositoryImpl @Inject constructor(
 
     override suspend fun getSettings(): Settings {
         if (isOnline()) {
-        try {
-            api.getSettings().let { dto ->
-                localRepo.saveSettings(dto.toEntity())
+            try {
+                api.getSettings().let { dto ->
+                    localRepo.saveSettings(dto.toEntity())
+                }
+            } catch (_: Exception) {
             }
-        } catch (_: Exception) {
-        }
         }
         return localRepo.getSettings()?.toDomain() ?: TODO()
     }

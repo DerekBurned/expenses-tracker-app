@@ -15,14 +15,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.expenses_tracker_app.presentation.features.transactionlist.TransactionListContract.ViewIntent
+import com.example.expenses_tracker_app.presentation.features.TransactionUiModel
 import com.example.expenses_tracker_app.presentation.features.transactionlist.TransactionListContract.ViewEffect
+import com.example.expenses_tracker_app.presentation.features.transactionlist.TransactionListContract.ViewIntent
 import com.example.expenses_tracker_app.presentation.features.transactionlist.TransactionListContract.ViewState
 
 /**
  * Entry point — the only place that touches the ViewModel.
  * Collects state and wires effects. Everything below this function
  * is stateless: it receives [ViewState] and [onIntent].
+ *
+ * Uses [BaseMviViewModel.uiState] and [BaseMviViewModel.uiEffect] (the
+ * base-class property names) instead of the old viewState/viewEffect fields.
  */
 @Composable
 fun TransactionListScreen(
@@ -32,14 +36,14 @@ fun TransactionListScreen(
 ) {
     // collectAsStateWithLifecycle stops collection when the app is backgrounded,
     // avoiding wasted work and battery drain.
-    val state by viewModel.viewState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // LaunchedEffect key = Unit → runs once and stays alive for the screen's
-    // lifetime. Effects are one-shot: the Channel guarantees each is consumed
-    // exactly once even if recomposition occurs mid-collect.
+    // lifetime. Effects are one-shot: the SharedFlow with extraBufferCapacity
+    // guarantees each is consumed exactly once even if recomposition occurs mid-collect.
     LaunchedEffect(Unit) {
-        viewModel.viewEffect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is ViewEffect.NavigateToAddTransaction -> onNavigateToAdd()
                 is ViewEffect.NavigateToDetail         -> onNavigateToDetail(effect.id)
@@ -51,7 +55,7 @@ fun TransactionListScreen(
     TransactionListContent(
         state             = state,
         snackbarHostState = snackbarHostState,
-        onIntent          = viewModel::handleIntent
+        onIntent          = viewModel::onIntent   // MviViewModel interface method
     )
 }
 
@@ -82,9 +86,9 @@ fun TransactionListContent(
                 .padding(padding)
         ) {
             BalanceCard(
-                balance     = state.balance,
-                isLoading   = state.isLoading,
-                onRefresh   = { onIntent(ViewIntent.RefreshRequested) }
+                balance   = state.balance,
+                isLoading = state.isLoading,
+                onRefresh = { onIntent(ViewIntent.RefreshRequested) }
             )
 
             if (state.transactions.isEmpty() && !state.isLoading) {

@@ -1,6 +1,9 @@
 package com.example.expenses_tracker_app.domain.model
 
 import com.example.expenses_tracker_app.data.remote.TransactionDTO
+import com.example.expenses_tracker_app.presentation.features.TransactionUiModel
+import java.text.NumberFormat
+import java.util.Locale
 
 sealed class Transaction {
     abstract val localId: String
@@ -48,3 +51,27 @@ fun Transaction.toDTO(): TransactionDTO =
             categoryLocalId = incomeType.name
         )
     }
+ fun Transaction.toUiModel(): TransactionUiModel {
+     val formatted = if (amount >= 0) "+${currencyFmt.format(amount)}"
+     else currencyFmt.format(amount)
+     return when (this) {
+         is Transaction.Expense -> TransactionUiModel(
+             id = localId,
+             title = description,
+             amount = amount,
+             amountLabel = formatted,
+             category = expenseType.name.replace("_", " "),
+             isExpense = true
+         )
+
+         is Transaction.Income -> TransactionUiModel(
+             id = localId,
+             title = description,
+             amount = amount,
+             amountLabel = formatted,
+             category = incomeType.name.replace("_", " "),
+             isExpense = false
+         )
+     }
+ }
+private val currencyFmt = NumberFormat.getCurrencyInstance(Locale.US)

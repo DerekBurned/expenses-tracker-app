@@ -1,4 +1,4 @@
-package com.example.expenses_tracker_app.presentation.features.expense.ui.AddNewCategoryScreen
+package com.example.expenses_tracker_app.presentation.features.addnewcategoryscreen
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween

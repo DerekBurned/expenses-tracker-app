@@ -68,7 +68,7 @@ import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewEffect
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewIntent
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewState
-import com.example.expenses_tracker_app.presentation.features.expense.ui.AddNewCategoryScreen.AddNewCategoryDialog
+import com.example.expenses_tracker_app.presentation.features.addnewcategoryscreen.AddNewCategoryDialog
 
 // ── Colour tokens ─────────────────────────────────────────────────────────────
 
@@ -86,20 +86,24 @@ private const val ADD_CATEGORY_SENTINEL = "__ADD__"
 /**
  * Injects the ViewModel, collects state, and wires one-time effects.
  * Everything below this composable is stateless.
+ *
+ * Uses [BaseMviViewModel.uiState] and [BaseMviViewModel.uiEffect] (the
+ * base-class property names) instead of the old viewState/viewEffect fields.
  */
 @Composable
 fun AddTransactionScreen(
     viewModel: AddTransactionViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val state by viewModel.viewState.collectAsStateWithLifecycle()
+    // uiState / uiEffect come from BaseMviViewModel
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.viewEffect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is ViewEffect.NavigateBack  -> onNavigateBack()
-                is ViewEffect.ShowSnackbar  -> snackbarHostState.showSnackbar(effect.message)
+                is ViewEffect.NavigateBack -> onNavigateBack()
+                is ViewEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
@@ -107,7 +111,7 @@ fun AddTransactionScreen(
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { _ ->
         AddTransactionContent(
             state    = state,
-            onIntent = viewModel::handleIntent
+            onIntent = viewModel::onIntent   // MviViewModel interface method
         )
     }
 }

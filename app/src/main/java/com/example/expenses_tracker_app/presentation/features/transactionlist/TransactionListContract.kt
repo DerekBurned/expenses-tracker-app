@@ -1,5 +1,7 @@
 package com.example.expenses_tracker_app.presentation.features.transactionlist
 
+import com.example.expenses_tracker_app.presentation.features.TransactionUiModel
+
 /**
  * Single source of truth for everything the TransactionList feature
  * can show, receive, or emit. Keeping all three sealed types in one
@@ -52,11 +54,3 @@ object TransactionListContract {
 }
 
 /** Presentation model — only what the View needs, nothing more. */
-data class TransactionUiModel(
-    val id: String,
-    val title: String,
-    val amount: Double,
-    val amountLabel: String,   // pre-formatted, e.g. "+$2,000.00"
-    val category: String,
-    val isExpense: Boolean
-)

@@ -1,18 +1,16 @@
 package com.example.expenses_tracker_app.presentation.features.addtransaction
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expenses_tracker_app.data.worker.SyncScheduler
 import com.example.expenses_tracker_app.domain.model.ExpenseType
 import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.domain.model.Transaction
 import com.example.expenses_tracker_app.domain.usecase.transaction.AddTransactionUseCase
-import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewState
-import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewIntent
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewEffect
+import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewIntent
+import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewState
+import com.example.expenses_tracker_app.presentation.mvi.BaseMviViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
@@ -22,35 +20,24 @@ import javax.inject.Inject
 class AddTransactionViewModel @Inject constructor(
     private val addTransactionUseCase: AddTransactionUseCase,
     private val syncScheduler: SyncScheduler
-) : ViewModel() {
-
-    // ── State ─────────────────────────────────────────────────────────────────
-
-    private val _viewState = MutableStateFlow(ViewState())
-    val viewState: StateFlow<ViewState> = _viewState.asStateFlow()
-
-    // ── Effects ───────────────────────────────────────────────────────────────
-
-    private val _viewEffect = Channel<ViewEffect>(Channel.BUFFERED)
-    val viewEffect: Flow<ViewEffect> = _viewEffect.receiveAsFlow()
+) : BaseMviViewModel<ViewState, ViewIntent, ViewEffect>(initialState = ViewState()) {
 
     // ── Intent handler ────────────────────────────────────────────────────────
 
     /**
-     * Single entry point. Every user gesture sends a [ViewIntent] here.
-     * No public methods exist on the ViewModel other than this one —
-     * this enforces UDF strictly.
+     * Single entry point required by [BaseMviViewModel] / [MviViewModel].
+     * Every user gesture sends a [ViewIntent] here.
      */
-    fun handleIntent(intent: ViewIntent) {
+    override fun onIntent(intent: ViewIntent) {
         when (intent) {
-            is ViewIntent.TypeToggled            -> reduce { copy(isExpense = intent.isExpense, amountError = false, descriptionError = false) }
-            is ViewIntent.AmountChanged          -> reduce { copy(amountText = intent.raw.filter { it.isDigit() || it == '.' }, amountError = false) }
-            is ViewIntent.DescriptionChanged     -> reduce { copy(description = intent.text, descriptionError = false) }
-            is ViewIntent.ExpenseCategorySelected -> reduce { copy(selectedExpenseCategory = intent.type) }
-            is ViewIntent.IncomeCategorySelected  -> reduce { copy(selectedIncomeCategory = intent.type) }
-            is ViewIntent.AddCustomCategory      -> addCustomCategory(intent.name)
-            is ViewIntent.SubmitClicked          -> submit()
-            is ViewIntent.BackClicked            -> emitEffect(ViewEffect.NavigateBack)
+            is ViewIntent.TypeToggled             -> updateState { copy(isExpense = intent.isExpense, amountError = false, descriptionError = false) }
+            is ViewIntent.AmountChanged           -> updateState { copy(amountText = intent.raw.filter { it.isDigit() || it == '.' }, amountError = false) }
+            is ViewIntent.DescriptionChanged      -> updateState { copy(description = intent.text, descriptionError = false) }
+            is ViewIntent.ExpenseCategorySelected -> updateState { copy(selectedExpenseCategory = intent.type) }
+            is ViewIntent.IncomeCategorySelected  -> updateState { copy(selectedIncomeCategory = intent.type) }
+            is ViewIntent.AddCustomCategory       -> addCustomCategory(intent.name)
+            is ViewIntent.SubmitClicked           -> submit()
+            is ViewIntent.BackClicked             -> emitEffect(ViewEffect.NavigateBack)
         }
     }
 
@@ -58,28 +45,27 @@ class AddTransactionViewModel @Inject constructor(
 
     private fun addCustomCategory(name: String) {
         val trimmed = name.trim().ifBlank { return }
-        val state = _viewState.value
+        val state = uiState.value
         val prefix = if (state.isExpense) "EXPENSE" else "INCOME"
         val key = "${prefix}_${trimmed.lowercase().replace(" ", "_")}"
-        reduce { copy(customCategories = customCategories + (key to trimmed)) }
+        updateState { copy(customCategories = customCategories + (key to trimmed)) }
     }
 
     private fun submit() {
-        val state = _viewState.value
+        val state = uiState.value
 
         // ── Validation ────────────────────────────────────────────────────────
-        // Produce a new state that surfaces all validation errors simultaneously
-        // rather than one-at-a-time (better UX, single state emission).
+        // Surface all validation errors simultaneously (better UX, single state emission).
         val amount = state.amountText.toDoubleOrNull()
         val hasAmountError = amount == null
         val hasDescriptionError = state.description.isBlank()
 
         if (hasAmountError || hasDescriptionError) {
-            reduce { copy(amountError = hasAmountError, descriptionError = hasDescriptionError) }
+            updateState { copy(amountError = hasAmountError, descriptionError = hasDescriptionError) }
             return
         }
 
-        // Guard: if already saving, swallow duplicate taps.
+        // Guard: swallow duplicate taps while already saving.
         if (state.isSaving) return
 
         // ── Build domain model ────────────────────────────────────────────────
@@ -104,7 +90,7 @@ class AddTransactionViewModel @Inject constructor(
 
         // ── Persist ───────────────────────────────────────────────────────────
         viewModelScope.launch {
-            reduce { copy(isSaving = true) }
+            updateState { copy(isSaving = true) }
             try {
                 addTransactionUseCase(transaction)
                 syncScheduler.scheduleSync()
@@ -112,19 +98,9 @@ class AddTransactionViewModel @Inject constructor(
                 // screen will be popped. If navigation fails, the catch block handles it.
                 emitEffect(ViewEffect.NavigateBack)
             } catch (e: Exception) {
-                reduce { copy(isSaving = false) }
+                updateState { copy(isSaving = false) }
                 emitEffect(ViewEffect.ShowSnackbar(e.message ?: "Failed to save transaction"))
             }
         }
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private fun reduce(block: ViewState.() -> ViewState) {
-        _viewState.update { it.block() }
-    }
-
-    private fun emitEffect(effect: ViewEffect) {
-        viewModelScope.launch { _viewEffect.send(effect) }
     }
 }
