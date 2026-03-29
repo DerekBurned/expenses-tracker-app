@@ -1,5 +1,6 @@
 package com.example.expenses_tracker_app.data.repository
 
+import coil3.network.NetworkResponseBody
 import com.example.expenses_tracker_app.data.local.entity.toDTO
 import com.example.expenses_tracker_app.data.local.entity.toDomain
 import com.example.expenses_tracker_app.data.local.entity.toEntity
@@ -68,8 +69,45 @@ class AppRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTransaction(localId: String): Result<Boolean> {
-        localRepo.deleteTransaction(localId)
-        try { api.deleteTransaction(localId) } catch (_: Exception) { /* best effort */ }
+        if(localRepo.getTransactionById(localId) != null) {
+            if(api.checkIfTransactionExists(localId).body() == true){
+                 api.deleteTransaction(localId)
+            }
+             localRepo.deleteTransaction(localId)
+            return Result.success(true)
+        }
+        return Result.failure(Exception("Transaction not found"))
+
+    }
+
+    override suspend fun getTransactionByID(id: String): Transaction {
+        if(localRepo.getTransactionById(id) != null) {
+            return localRepo.getTransactionById(id)!!.toDomain()
+        }
+        return api.getTransactionByID(id).toEntity().toDomain().also {
+            localRepo.addTransaction(it.toEntity())
+            if (localRepo.getTransactionById(id)?.isSynced == false) {
+                try {
+                    api.updateTransaction(id, it.toEntity().toDTO())
+                } catch (_: Exception) {
+                    // silently fail
+                }
+
+        }
+
+
+    }
+    }
+
+    override suspend fun updateTransaction(transaction: Transaction): Result<Boolean> {
+        localRepo.updateTransaction(transaction.toEntity())
+        if(api.checkIfTransactionExists(transaction.localId).body() == true) {
+            try {
+                api.updateTransaction(transaction.localId, transaction.toEntity().toDTO())
+            } catch (_: Exception) {
+
+            }
+        }
         return Result.success(true)
     }
 

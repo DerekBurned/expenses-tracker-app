@@ -26,6 +26,14 @@ class AppLocalRepositoryImpl @Inject constructor(
     override suspend fun deleteTransaction(id: String) =
         transactionDao.deleteTransaction(id)
 
+    override suspend fun updateTransaction(transaction: TransactionEntity) {
+        transactionDao.updateTransaction(transaction)
+    }
+
+    override suspend fun getTransactionById(id: String): TransactionEntity? {
+       return transactionDao.getTransactionByID(id)
+    }
+
 
     override suspend fun getSettings(): SettingsEntity? =
         settingsDao.getSettings()
@@ -39,9 +47,10 @@ class AppLocalRepositoryImpl @Inject constructor(
     override suspend fun updateSettings(settings: SettingsEntity) =
         settingsDao.updateSettings(settings)
 
-
     override suspend fun getUnsyncedTransactions(): List<TransactionEntity> =
         transactionDao.getUnsyncedTransactions()
+
+
 
 
 }

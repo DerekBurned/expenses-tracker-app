@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.expenses_tracker_app.data.local.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -22,6 +23,10 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE localId = :id")
     suspend fun deleteTransaction(id: String)
+    @Update
+    suspend fun updateTransaction(transaction: TransactionEntity)
+    @Query("SELECT * FROM transactions WHERE localId = :id")
+    suspend fun getTransactionByID(id: String): TransactionEntity?
 
     @Query("SELECT * FROM transactions WHERE isSynced = 0")
     suspend fun getUnsyncedTransactions(): List<TransactionEntity>

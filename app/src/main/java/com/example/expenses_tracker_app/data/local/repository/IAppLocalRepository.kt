@@ -9,6 +9,9 @@ interface IAppLocalRepository {
     suspend fun addTransaction(transaction: TransactionEntity)
     suspend fun markAsSynced(ids: List<String>)
     suspend fun deleteTransaction(id: String)
+    suspend fun updateTransaction(transaction: TransactionEntity)
+    suspend fun getTransactionById(id: String): TransactionEntity?
+
     suspend fun getSettings(): SettingsEntity?
     suspend fun saveSettings(settings: SettingsEntity)
     suspend fun updateSettings(settings: SettingsEntity)

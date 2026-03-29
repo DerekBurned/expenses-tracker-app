@@ -8,6 +8,8 @@ interface IAppRepository {
     suspend fun getAllTransaction(): List<Transaction>
     suspend fun addTransaction(transaction: Transaction)
     suspend fun deleteTransaction(localId: String): Result<Boolean>
+    suspend fun getTransactionByID(id: String): Transaction
+    suspend fun updateTransaction(transaction: Transaction): Result<Boolean>
     suspend fun getSettings(): Settings
     suspend fun saveSettings(settings: Settings)
     suspend fun getCustomCategories(): Map<String, String>
