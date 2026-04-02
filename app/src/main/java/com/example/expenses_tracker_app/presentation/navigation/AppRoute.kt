@@ -5,7 +5,8 @@ sealed class AppRoute {
     data object AddExpense : AppRoute()
     data object EditExpense : AppRoute()
     data object Settings : AppRoute()
-    data class Detail(val expenseId: String) : AppRoute()
+    data class Detail(val transactionId: String) : AppRoute()
+    data class AddCategory(val isExpense: Boolean) : AppRoute()
 }
 
 

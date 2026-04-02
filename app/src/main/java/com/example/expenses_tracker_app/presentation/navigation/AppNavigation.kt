@@ -1,12 +1,13 @@
 package com.example.expenses_tracker_app.presentation.navigation
 
 import androidx.compose.runtime.*
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.example.expenses_tracker_app.presentation.features.addcategory.AddCategoryScreen
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionScreen
+import com.example.expenses_tracker_app.presentation.features.transactiondetails.TransactionDetailsScreen
 import com.example.expenses_tracker_app.presentation.features.transactionlist.TransactionListScreen
 
 @Composable
@@ -34,13 +35,27 @@ fun AppNavigation() {
 
             entry<AppRoute.AddExpense> {
                 AddTransactionScreen(
+                    onNavigateBack = ::navigateBack,
+                    onNavigateToAddCategory = { isExpense ->
+                        navigate(AppRoute.AddCategory(isExpense))
+                    }
+                )
+            }
+
+            entry<AppRoute.Detail> {
+                TransactionDetailsScreen(
+                    onNavigateBack = ::navigateBack
+                )
+            }
+
+            entry<AppRoute.AddCategory> {
+                AddCategoryScreen(
                     onNavigateBack = ::navigateBack
                 )
             }
 
             entry<AppRoute.EditExpense> { /* TODO */ }
             entry<AppRoute.Settings>    { /* TODO */ }
-            entry<AppRoute.Detail>      { /* TODO */ }
         }
     )
 }
