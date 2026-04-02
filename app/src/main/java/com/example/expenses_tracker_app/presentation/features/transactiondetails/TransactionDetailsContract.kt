@@ -13,7 +13,7 @@ object TransactionDetailsContract {
             amountLabel = "",
             isExpense   = false
         ),
-        val Data : String  =TODO()
+        val Data : String  =TODO(),
         val isLoading: Boolean = false,
         val isEditDialogVisible: Boolean = false,
         val errorMessage: String = ""

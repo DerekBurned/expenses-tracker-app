@@ -339,3 +339,9 @@ crashlytics-build.properties
 fabric.properties
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Gradle,Kotlin,Android,Intellij,AndroidStudio
+
+# Backend (Spring Boot / Maven)
+backend/target/
+backend/data/
+backend/.mvn/
+backend/*.iml
