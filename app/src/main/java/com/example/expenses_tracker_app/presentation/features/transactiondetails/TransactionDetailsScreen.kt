@@ -183,13 +183,13 @@ fun TransactionDetailsContent(
     // ── Edit bottom sheet ─────────────────────────────────────────────────────
     if (state.isEditDialogVisible) {
         EditBottomSheet(
-            transaction = state.transaction,
-            accentColor = accentColor,
-            onConfirm   = { onIntent(ViewIntent.UpdateTransactionConfirmClicked) },
-            onDismiss   = { /* sheet dismissed without saving — no intent needed,
-                              ViewModel's isEditDialogVisible stays true until
-                              an explicit confirm or dismiss intent resets it.
-                              Add a DismissClicked intent if you need to track this. */ }
+            editAmount      = state.editAmount,
+            editDescription = state.editDescription,
+            accentColor     = accentColor,
+            onAmountChange  = { onIntent(ViewIntent.EditAmountChanged(it)) },
+            onDescriptionChange = { onIntent(ViewIntent.EditDescriptionChanged(it)) },
+            onConfirm       = { onIntent(ViewIntent.UpdateTransactionConfirmClicked) },
+            onDismiss       = { onIntent(ViewIntent.DismissEditClicked) }
         )
     }
 
@@ -328,17 +328,15 @@ private fun Divider() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditBottomSheet(
-    transaction: TransactionUiModel,
+    editAmount: String,
+    editDescription: String,
     accentColor: Color,
+    onAmountChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    // Local draft state — edits live here until the user confirms.
-    // They never touch ViewState until UpdateTransactionConfirmClicked is sent.
-    var draftAmount      by remember { mutableStateOf(transaction.amountLabel.filter { it.isDigit() || it == '.' }) }
-    var draftDescription by remember { mutableStateOf(transaction.title) }
 
     ModalBottomSheet(
         onDismissRequest  = onDismiss,
@@ -369,12 +367,11 @@ private fun EditBottomSheet(
 
             Spacer(Modifier.height(24.dp))
 
-            // Amount field
             SheetFieldLabel("Amount")
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value         = draftAmount,
-                onValueChange = { draftAmount = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                value         = editAmount,
+                onValueChange = onAmountChange,
                 leadingIcon   = {
                     Text(
                         text       = "$",
@@ -394,12 +391,11 @@ private fun EditBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // Description field
             SheetFieldLabel("Description")
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value         = draftDescription,
-                onValueChange = { draftDescription = it },
+                value         = editDescription,
+                onValueChange = onDescriptionChange,
                 singleLine    = true,
                 colors        = sheetTextFieldColors(accentColor),
                 shape         = RoundedCornerShape(14.dp),
@@ -409,7 +405,6 @@ private fun EditBottomSheet(
 
             Spacer(Modifier.height(32.dp))
 
-            // Save button
             Button(
                 onClick  = onConfirm,
                 modifier = Modifier

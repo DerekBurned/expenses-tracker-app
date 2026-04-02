@@ -9,6 +9,7 @@ import com.example.expenses_tracker_app.data.remote.ExpenseApi
 import com.example.expenses_tracker_app.data.remote.toEntity
 import com.example.expenses_tracker_app.domain.model.Settings
 import com.example.expenses_tracker_app.domain.model.Transaction
+import com.example.expenses_tracker_app.domain.model.toEntity
 import com.example.expenses_tracker_app.domain.repository.IAppRepository
 import com.example.expenses_tracker_app.utils.internetConnectionObserver.NetworkObserver
 import kotlinx.coroutines.flow.first
@@ -120,19 +121,26 @@ class AppRepositoryImpl @Inject constructor(
             } catch (_: Exception) {
             }
         }
-        return localRepo.getSettings()?.toDomain() ?: TODO()
+        return localRepo.getSettings()?.toDomain() ?: Settings(
+            userId = "",
+            name = "",
+            icon = "",
+            email = "",
+            darkTheme = null,
+            customCategories = emptyMap()
+        )
     }
 
     override suspend fun saveSettings(settings: Settings) {
-        TODO("Not yet implemented")
+        localRepo.saveSettings(settings.toEntity())
     }
 
     override suspend fun getCustomCategories(): Map<String, String> {
-        TODO("Not yet implemented")
+        return localRepo.getCustomCategories() ?: emptyMap()
     }
 
     override suspend fun updateSettings(settings: Settings) {
-        TODO("Not yet implemented")
+        localRepo.updateSettings(settings.toEntity())
     }
 
 }

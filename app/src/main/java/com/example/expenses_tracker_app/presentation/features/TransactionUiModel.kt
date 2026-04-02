@@ -6,5 +6,6 @@ data class TransactionUiModel(
     val amount: Double,
     val amountLabel: String,   // pre-formatted, e.g. "+$2,000.00"
     val category: String,
-    val isExpense: Boolean
+    val isExpense: Boolean,
+    val date: String = ""
 )

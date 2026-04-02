@@ -61,7 +61,8 @@ fun Transaction.toDTO(): TransactionDTO =
              amount = amount,
              amountLabel = formatted,
              category = expenseType.name.replace("_", " "),
-             isExpense = true
+             isExpense = true,
+             date = date
          )
 
          is Transaction.Income -> TransactionUiModel(
@@ -70,7 +71,8 @@ fun Transaction.toDTO(): TransactionDTO =
              amount = amount,
              amountLabel = formatted,
              category = incomeType.name.replace("_", " "),
-             isExpense = false
+             isExpense = false,
+             date = date
          )
      }
  }

@@ -13,15 +13,19 @@ object TransactionDetailsContract {
             amountLabel = "",
             isExpense   = false
         ),
-        val Data : String  =TODO(),
         val isLoading: Boolean = false,
         val isEditDialogVisible: Boolean = false,
+        val editAmount: String = "",
+        val editDescription: String = "",
         val errorMessage: String = ""
     )
 
     sealed class ViewIntent {
-        object UpdateTransactionClicked        : ViewIntent()  // opens edit dialog/sheet
-        object UpdateTransactionConfirmClicked : ViewIntent()  // saves changes
+        object UpdateTransactionClicked        : ViewIntent()
+        object UpdateTransactionConfirmClicked : ViewIntent()
+        object DismissEditClicked              : ViewIntent()
+        data class EditAmountChanged(val raw: String) : ViewIntent()
+        data class EditDescriptionChanged(val text: String) : ViewIntent()
         object DeleteTransactionClicked        : ViewIntent()
         object BackClicked                     : ViewIntent()
     }
