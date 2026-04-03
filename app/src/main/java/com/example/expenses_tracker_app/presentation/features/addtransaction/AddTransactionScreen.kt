@@ -68,7 +68,7 @@ import com.example.expenses_tracker_app.domain.model.IncomeType
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewEffect
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewIntent
 import com.example.expenses_tracker_app.presentation.features.addtransaction.AddTransactionContract.ViewState
-import com.example.expenses_tracker_app.presentation.features.addnewcategoryscreen.AddNewCategoryDialog
+// AddNewCategoryDialog replaced by full AddCategoryScreen
 
 // ── Colour tokens ─────────────────────────────────────────────────────────────
 
@@ -93,17 +93,18 @@ private const val ADD_CATEGORY_SENTINEL = "__ADD__"
 @Composable
 fun AddTransactionScreen(
     viewModel: AddTransactionViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToAddCategory: (Boolean) -> Unit = {}
 ) {
-    // uiState / uiEffect come from BaseMviViewModel
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is ViewEffect.NavigateBack -> onNavigateBack()
-                is ViewEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is ViewEffect.NavigateBack          -> onNavigateBack()
+                is ViewEffect.NavigateToAddCategory -> onNavigateToAddCategory(effect.isExpense)
+                is ViewEffect.ShowSnackbar          -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
@@ -111,7 +112,7 @@ fun AddTransactionScreen(
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { _ ->
         AddTransactionContent(
             state    = state,
-            onIntent = viewModel::onIntent   // MviViewModel interface method
+            onIntent = viewModel::onIntent
         )
     }
 }
@@ -123,11 +124,6 @@ fun AddTransactionContent(
     state: ViewState,
     onIntent: (ViewIntent) -> Unit
 ) {
-    // The only local state: whether the add-category dialog is open.
-    // This is purely ephemeral presentation — no business logic depends on it.
-    // The *result* (the category name) travels upward as a ViewIntent.
-    var showAddCategoryDialog by remember { mutableStateOf(false) }
-
     val accentColor by animateColorAsState(
         targetValue   = if (state.isExpense) ExpenseRed else IncomeGreen,
         animationSpec = tween(400),
@@ -238,7 +234,7 @@ fun AddTransactionContent(
                     customCategories  = customExpenseNames,
                     selected          = state.selectedExpenseCategory.name,
                     accentColor       = accentColor,
-                    onAddCategory     = { showAddCategoryDialog = true },
+                    onAddCategory     = { onIntent(ViewIntent.AddCategoryClicked) },
                     onSelect          = { name ->
                         val type = ExpenseType.entries.firstOrNull { it.name == name }
                             ?: ExpenseType.DEFAULT
@@ -254,7 +250,7 @@ fun AddTransactionContent(
                     customCategories  = customIncomeNames,
                     selected          = state.selectedIncomeCategory.name,
                     accentColor       = accentColor,
-                    onAddCategory     = { showAddCategoryDialog = true },
+                    onAddCategory     = { onIntent(ViewIntent.AddCategoryClicked) },
                     onSelect          = { name ->
                         val type = IncomeType.entries.firstOrNull { it.name == name }
                             ?: IncomeType.OTHER
@@ -294,17 +290,6 @@ fun AddTransactionContent(
             Spacer(Modifier.height(40.dp))
         }
 
-        // ── Add-category dialog ───────────────────────────────────────────────
-        if (showAddCategoryDialog) {
-            AddNewCategoryDialog(
-                isExpense = state.isExpense,
-                onDismiss = { showAddCategoryDialog = false },
-                onConfirm = { name ->
-                    onIntent(ViewIntent.AddCustomCategory(name))
-                    showAddCategoryDialog = false
-                }
-            )
-        }
     }
 }
 

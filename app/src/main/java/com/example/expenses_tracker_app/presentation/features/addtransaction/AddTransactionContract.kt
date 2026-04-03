@@ -31,13 +31,14 @@ object AddTransactionContract {
         data class DescriptionChanged(val text: String) : ViewIntent()
         data class ExpenseCategorySelected(val type: ExpenseType) : ViewIntent()
         data class IncomeCategorySelected(val type: IncomeType) : ViewIntent()
-        data class AddCustomCategory(val name: String) : ViewIntent()
+        object AddCategoryClicked : ViewIntent()
         object SubmitClicked : ViewIntent()
         object BackClicked : ViewIntent()
     }
 
     sealed class ViewEffect {
         object NavigateBack : ViewEffect()
+        data class NavigateToAddCategory(val isExpense: Boolean) : ViewEffect()
         data class ShowSnackbar(val message: String) : ViewEffect()
     }
 }
